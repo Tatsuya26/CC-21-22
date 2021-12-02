@@ -14,8 +14,10 @@ public class FFSync {
             Thread serverUDP = new Thread(new FTRapidServer(diretoria,ips));
             cliente.start();
             serverUDP.start();
+            cliente.join();
+            serverUDP.join();
         }
-        catch (IOException e) {
+        catch (IOException | InterruptedException e) {
              e.printStackTrace();   
         }
             
