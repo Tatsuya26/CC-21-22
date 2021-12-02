@@ -23,12 +23,11 @@ public class ServerWorker implements Runnable{
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
             String dados = new String(this.received.getData());
-            dados = dados.toUpperCase();
-            DatagramPacket sendPacket = new DatagramPacket(dados.getBytes(),dados.getBytes().length,clientIP,port);
+            String resposta = "Conexão estabelecida ao endereço " + clientIP.toString();
+            DatagramPacket sendPacket = new DatagramPacket(resposta.getBytes(),resposta.getBytes().length,clientIP,port);
             socket.send(sendPacket);
             socket.receive(sendPacket);
-            String resultado = new String(sendPacket.getData());
-            System.out.println(resultado);
+            System.out.println(new String(sendPacket.getData()));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
