@@ -20,6 +20,8 @@ public class FTRapidClient implements Runnable{
     public void run() {
         try{
             DatagramSocket socket = new DatagramSocket();
+            int port = socket.getPort();
+            System.out.println(port);
             String line = "Tiagos David";
             DatagramPacket outPacket = new DatagramPacket(line.getBytes(), line.length(),ips[0],80);
             socket.setSoTimeout(5000);
@@ -27,7 +29,9 @@ public class FTRapidClient implements Runnable{
             while (i < 5){
                 try {
                     socket.send(outPacket);
+                    System.out.println("Mensagem enviada para o endereço "+ ips[0].toString());
                     socket.receive(outPacket);
+                    System.out.println("Mensagem recebida em " + InetAddress.getLocalHost().toString());
                     i = 5;
                 }
                 catch (SocketTimeoutException e) {
@@ -35,7 +39,7 @@ public class FTRapidClient implements Runnable{
                 }
             }
             String resultado = new String(outPacket.getData());
-            int port = outPacket.getPort();
+            port = outPacket.getPort();
             InetAddress ip = outPacket.getAddress();
             outPacket = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
             socket.send(outPacket);

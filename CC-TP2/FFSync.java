@@ -4,6 +4,10 @@ import java.net.InetAddress;
 
 public class FFSync {
     public static void main(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Falta argumentos");
+            return ;
+        }
         String pasta = args[0];
         try{
             InetAddress[] ips = new InetAddress[args.length - 1];
