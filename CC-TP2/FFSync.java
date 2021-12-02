@@ -9,20 +9,15 @@ public class FFSync {
             InetAddress[] ips = new InetAddress[args.length - 1];
             for (int i = 1 ; i < args.length; i++) 
                 ips[i-1] = InetAddress.getByName(args[i]);
+            File diretoria = new File(pasta);
+            Thread cliente = new Thread(new FTRapidClient(diretoria, ips));
+            Thread serverUDP = new Thread(new FTRapidServer(diretoria,ips));
+            cliente.start();
+            serverUDP.start();
         }
         catch (IOException e) {
              e.printStackTrace();   
         }
             
-        File diretoria = new File(pasta);
-        if (diretoria.exists()) {
-        File[] ficheiros = diretoria.listFiles();
-
-        System.out.println("Ficheiros a sincronizar");
-        for (File f:ficheiros) {
-            System.out.println(f.getName());
-        }
-        }
-        else System.out.println("Pasta não existe");
     }
 }

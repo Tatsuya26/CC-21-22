@@ -23,9 +23,6 @@ public class ServerWorker implements Runnable{
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
             String dados = new String(this.received.getData());
-            System.out.println("IP : " + clientIP.toString());
-            System.out.println("Port : " + port);
-            System.out.println(dados);
             dados = dados.toUpperCase();
             DatagramPacket sendPacket = new DatagramPacket(dados.getBytes(),dados.getBytes().length,clientIP,port);
             socket.send(sendPacket);
