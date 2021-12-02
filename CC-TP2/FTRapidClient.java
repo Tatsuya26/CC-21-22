@@ -31,7 +31,6 @@ public class FTRapidClient implements Runnable{
                     socket.send(outPacket);
                     System.out.println("Mensagem enviada para o endereço "+ ips[0].toString());
                     socket.receive(outPacket);
-                    System.out.println("Mensagem recebida em " + InetAddress.getLocalHost().toString());
                     i = 5;
                 }
                 catch (SocketTimeoutException e) {
