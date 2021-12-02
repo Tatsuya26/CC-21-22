@@ -21,7 +21,7 @@ public class FFSync {
             cliente.join();
             serverUDP.join();
         }
-        catch (IOException | InterruptedException e) {
+        catch (IOException | InterruptedException  e) {
              e.printStackTrace();   
         }
             
