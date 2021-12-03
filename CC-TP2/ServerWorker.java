@@ -44,7 +44,9 @@ public class ServerWorker implements Runnable{
             byte[] data = bos.toByteArray();
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
-            System.out.println(new String(data));
+            for (byte b : data) {
+                System.out.print(b);
+            }
             socket.send(sendPacket);
             socket.receive(this.received);
             System.out.println(new String(this.received.getData()));
