@@ -21,7 +21,7 @@ public class FTRapidClient implements Runnable{
 
     public void run() {
         try{
-            byte[] data = new byte[1300];
+            byte[] data = null;
             DatagramSocket socket = new DatagramSocket();
             String line = "Pedido dos ficheiros";
             DatagramPacket outPacket = new DatagramPacket(line.getBytes(), line.length(),ips[0],80);
@@ -42,13 +42,13 @@ public class FTRapidClient implements Runnable{
                 System.out.print(b);
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
             List<FileInfo> fis = new ArrayList<>();
-            //while (bis.available() > 0) {
-                //FileInfo fi = FileInfo.deserialize(bis);
-                //fis.add(fi);
-            //}
+            while (bis.available() > 0) {
+                FileInfo fi = FileInfo.deserialize(bis);
+                fis.add(fi);
+            }
 
-            //for (FileInfo f : fis) 
-            //    System.out.println(f.toString());
+            for (FileInfo f : fis) 
+                System.out.println(f.toString());
                 
             int port = outPacket.getPort();
             InetAddress ip = outPacket.getAddress();
