@@ -1,15 +1,27 @@
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ServerWorker implements Runnable{
     public DatagramPacket received;
     public DatagramSocket socket;
+    public File folder;
+    public InetAddress[] ips;
 
-    public ServerWorker(DatagramPacket received) {
+    public ServerWorker(DatagramPacket received,File folder,InetAddress[] ips) {
         this.received = received;
+        this.folder = folder;
+        this.ips = ips;
         try {
             this.socket = new DatagramSocket();
         } catch (SocketException e) {
@@ -22,13 +34,19 @@ public class ServerWorker implements Runnable{
         try {
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            String dados = new String(this.received.getData());
-            dados = dados.toUpperCase();
-            DatagramPacket sendPacket = new DatagramPacket(dados.getBytes(),dados.getBytes().length,clientIP,port);
+            File[] subFicheiros = folder.listFiles();
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            for (File f  : subFicheiros) {
+                BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+                FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
+                bos.write(fi.serialize());
+            }
+            byte[] data = bos.toByteArray();
+            DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
+            System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
             socket.send(sendPacket);
-            socket.receive(sendPacket);
-            String resultado = new String(sendPacket.getData());
-            System.out.println(resultado);
+            socket.receive(this.received);
+            System.out.println(new String(this.received.getData()));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

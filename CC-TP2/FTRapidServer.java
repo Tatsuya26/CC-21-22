@@ -21,7 +21,7 @@ public class FTRapidServer implements Runnable{
             DatagramSocket serverSocket = new DatagramSocket(80);
             DatagramPacket receiver = new DatagramPacket(buffer, length);
             serverSocket.receive(receiver);
-            Thread executante = new Thread(new ServerWorker(receiver));
+            Thread executante = new Thread(new ServerWorker(receiver,folder,ips));
             executante.start();
             serverSocket.close();
         } catch (IOException e) {
