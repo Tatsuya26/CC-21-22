@@ -49,6 +49,7 @@ public class FileInfo {
         String millis = new String(dis.readNBytes(length));
         length = dis.readInt();
         String size = new String(dis.readNBytes(length));
+        dis.close();
         return new FileInfo(name, millis, size);
     }
 
