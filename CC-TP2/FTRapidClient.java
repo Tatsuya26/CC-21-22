@@ -38,17 +38,16 @@ public class FTRapidClient implements Runnable{
                     i++;
                 }
             }
+            System.out.println(new String(inPacket.getData()));
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
             List<FileInfo> fis = new ArrayList<>();
-            while (bis.available() > 0) {
-                FileInfo fi = FileInfo.deserialize(bis);
-                fis.add(fi);
-                System.out.println(fi.toString());
-                System.out.println(bis.available());
-            }
+            //while (bis.available() > 0) {
+                //FileInfo fi = FileInfo.deserialize(bis);
+                //fis.add(fi);
+            //}
 
-            for (FileInfo f : fis) 
-                System.out.println(f.toString());
+            //for (FileInfo f : fis) 
+            //    System.out.println(f.toString());
                 
             int port = outPacket.getPort();
             InetAddress ip = outPacket.getAddress();
