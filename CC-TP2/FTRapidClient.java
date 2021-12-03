@@ -43,6 +43,7 @@ public class FTRapidClient implements Runnable{
             while (bis.available() > 0) {
                 FileInfo fi = FileInfo.deserialize(bis);
                 fis.add(fi);
+                System.out.println(fi.toString());
                 System.out.println(bis.available());
             }
 
