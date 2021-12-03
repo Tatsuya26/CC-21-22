@@ -21,11 +21,12 @@ public class FTRapidClient implements Runnable{
 
     public void run() {
         try{
-            byte[] data = new byte[1300];
+            byte[] indata = new byte[1300];
+            byte[] outdata = new byte[1300];
             DatagramSocket socket = new DatagramSocket();
-            String line = "Pedido dos ficheiros";
-            DatagramPacket outPacket = new DatagramPacket(line.getBytes(), line.length(),ips[0],80);
-            DatagramPacket inPacket = new DatagramPacket(data, 1300);
+            outdata = new String("Pedido de ficheiros").getBytes();
+            DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
+            DatagramPacket inPacket = new DatagramPacket(indata, 1300);
             socket.setSoTimeout(5000);
             int i = 0;
             while (i < 5){
@@ -38,14 +39,17 @@ public class FTRapidClient implements Runnable{
                     i++;
                 }
             }
+            for (Byte b : inPacket.getData())
+                System.out.print(b);
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
             List<FileInfo> fis = new ArrayList<>();
-            while (bis.available() > 0) {
+            while (bis.read() == '+') {
                 FileInfo fi = FileInfo.deserialize(bis);
                 fis.add(fi);
-                System.out.println(fi.toString());
-                System.out.println(bis.available());
             }
+            //:FIXME : O PACOTE QUE VEM DA SOCKET VEM COM LIXO O QUE NAO PERMITE FAZER BEM O PARSING
+            //          Testa assim e se nao der, tenta ver onde os bytes mudam.
+            //          O + sinaliza que ainda há ficheiros para serem transferidos
 
             for (FileInfo f : fis) 
                 System.out.println(f.toString());
