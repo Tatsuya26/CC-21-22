@@ -40,7 +40,7 @@ public class ServerWorker implements Runnable{
                 BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
                 FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
                 bos.write(fi.serialize());
-                bos.write(Byte.parseByte("+"));
+                bos.write('+');
             }
             bos.write(Byte.parseByte("|"));
             byte[] data = bos.toByteArray();

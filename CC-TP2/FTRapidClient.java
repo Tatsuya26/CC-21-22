@@ -47,6 +47,9 @@ public class FTRapidClient implements Runnable{
                 FileInfo fi = FileInfo.deserialize(bis);
                 fis.add(fi);
             }
+            //:FIXME : O PACOTE QUE VEM DA SOCKET VEM COM LIXO O QUE NAO PERMITE FAZER BEM O PARSING
+            //          Testa assim e se nao der, tenta ver onde os bytes mudam.
+            //          O + sinaliza que ainda há ficheiros para serem transferidos
 
             for (FileInfo f : fis) 
                 System.out.println(f.toString());
