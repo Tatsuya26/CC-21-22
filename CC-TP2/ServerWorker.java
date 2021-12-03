@@ -40,7 +40,9 @@ public class ServerWorker implements Runnable{
                 BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
                 FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
                 bos.write(fi.serialize());
+                bos.write(Byte.parseByte("+"));
             }
+            bos.write(Byte.parseByte("|"));
             byte[] data = bos.toByteArray();
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
