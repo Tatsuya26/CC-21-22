@@ -1,4 +1,3 @@
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,8 +24,11 @@ public class FTRapidClient implements Runnable{
             byte[] outdata = new byte[1300];
             DatagramSocket socket = new DatagramSocket();
             outdata = new String("Pedido de ficheiros").getBytes();
+            System.out.println(outdata);
             DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
             DatagramPacket inPacket = new DatagramPacket(indata, 1300);
+            
+            //timeout até haver conexão
             socket.setSoTimeout(5000);
             int i = 0;
             while (i < 5){
@@ -39,21 +41,26 @@ public class FTRapidClient implements Runnable{
                     i++;
                 }
             }
-            for (Byte b : inPacket.getData())
-                System.out.print(b);
+            //print na consola o que foi recebido(a bunch of 0??)
+            //for (Byte b : inPacket.getData()) System.out.print(b);
+
+            //deserialize info from other per
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
             List<FileInfo> fis = new ArrayList<>();
             while (bis.read() == '+') {
                 FileInfo fi = FileInfo.deserialize(bis);
+                System.out.println(bis);
                 fis.add(fi);
             }
+
             //:FIXME : O PACOTE QUE VEM DA SOCKET VEM COM LIXO O QUE NAO PERMITE FAZER BEM O PARSING
             //          Testa assim e se nao der, tenta ver onde os bytes mudam.
             //          O + sinaliza que ainda há ficheiros para serem transferidos
 
             for (FileInfo f : fis) 
                 System.out.println(f.toString());
-                
+            
+            //print na consola para verificar se o que foi enviado está correto
             int port = outPacket.getPort();
             InetAddress ip = outPacket.getAddress();
             String resultado = "Obrigado";

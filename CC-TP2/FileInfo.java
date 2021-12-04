@@ -37,6 +37,7 @@ public class FileInfo {
         dos.writeBytes(time);
         dos.writeInt(size.length());
         dos.writeBytes(size);
+        dos.flush();
         info = bos.toByteArray();
         return info;
     }

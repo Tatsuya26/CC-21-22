@@ -1,16 +1,12 @@
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ServerWorker implements Runnable{
     public DatagramPacket received;
@@ -42,8 +38,9 @@ public class ServerWorker implements Runnable{
                 bos.write(fi.serialize());
                 bos.write('+');
             }
-            bos.write(Byte.parseByte("|"));
+            bos.write(Byte.parseByte("+123"));
             byte[] data = bos.toByteArray();
+            System.out.println(data);
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
             for (byte b : data) {
@@ -51,6 +48,7 @@ public class ServerWorker implements Runnable{
             }
             socket.send(sendPacket);
             socket.receive(this.received);
+            System.out.println("Server here!1");
             System.out.println(new String(this.received.getData()));
         } catch (IOException e) {
             // TODO Auto-generated catch block
