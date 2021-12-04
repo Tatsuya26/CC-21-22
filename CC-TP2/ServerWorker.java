@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -40,15 +41,24 @@ public class ServerWorker implements Runnable{
             }
             bos.write(Byte.parseByte("+123"));
             byte[] data = bos.toByteArray();
-            System.out.println(data);
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
-            for (byte b : data) {
+            /*for (byte b : data) {
                 System.out.print(b);
+            }*/
+            socket.setSoTimeout(5000);
+            int i = 0;
+            while (i < 5){
+                try {
+                    socket.send(sendPacket);
+                    socket.receive(this.received);
+                    i = 5;
+                }
+                catch (SocketTimeoutException e) {
+                    i++;
+                }
             }
-            socket.send(sendPacket);
-            socket.receive(this.received);
-            System.out.println("Server here!1");
+            System.out.println("Server here!");
             System.out.println(new String(this.received.getData()));
         } catch (IOException e) {
             // TODO Auto-generated catch block

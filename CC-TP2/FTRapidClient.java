@@ -24,7 +24,6 @@ public class FTRapidClient implements Runnable{
             byte[] outdata = new byte[1300];
             DatagramSocket socket = new DatagramSocket();
             outdata = new String("Pedido de ficheiros").getBytes();
-            System.out.println(outdata);
             DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
             DatagramPacket inPacket = new DatagramPacket(indata, 1300);
             
@@ -46,27 +45,26 @@ public class FTRapidClient implements Runnable{
 
             //deserialize info from other per
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-            List<FileInfo> fis = new ArrayList<>();
-            while (bis.read() == '+') {
+            //List<FileInfo> fis = new ArrayList<>();
+            //while (bis.read() == '+') {
                 FileInfo fi = FileInfo.deserialize(bis);
-                System.out.println(bis);
-                fis.add(fi);
-            }
+                System.out.println(fi.toString());
+              //  fis.add(fi);
+            //}
 
             //:FIXME : O PACOTE QUE VEM DA SOCKET VEM COM LIXO O QUE NAO PERMITE FAZER BEM O PARSING
             //          Testa assim e se nao der, tenta ver onde os bytes mudam.
             //          O + sinaliza que ainda há ficheiros para serem transferidos
 
-            for (FileInfo f : fis) 
-                System.out.println(f.toString());
+            //for (FileInfo f : fis)   System.out.println(f.toString());
             
             //print na consola para verificar se o que foi enviado está correto
             int port = outPacket.getPort();
             InetAddress ip = outPacket.getAddress();
             String resultado = "Obrigado";
             System.out.println("Agradecer ao IP " + ip.toString() + " na porta " + port);
-            outPacket = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
-            socket.send(outPacket);
+            DatagramPacket outPacket2 = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
+            socket.send(outPacket2);
             socket.close();
         }
         catch (IOException e) {
