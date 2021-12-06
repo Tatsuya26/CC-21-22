@@ -51,8 +51,8 @@ public class FTRapidClient implements Runnable{
             //print na consola para verificar se o que foi enviado está correto
             for (FileInfo f : fis)   System.out.println(f.toString());
             
-            int port = outPacket.getPort();
-            InetAddress ip = outPacket.getAddress();
+            int port = inPacket.getPort();
+            InetAddress ip = inPacket.getAddress();
             String resultado = "Obrigado";
             System.out.println("Agradecer ao IP " + ip.toString() + " na porta " + port);
             outPacket = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
