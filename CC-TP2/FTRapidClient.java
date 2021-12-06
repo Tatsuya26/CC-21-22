@@ -28,13 +28,13 @@ public class FTRapidClient implements Runnable{
             DatagramPacket inPacket = new DatagramPacket(indata, 1300);
             
             //timeout até haver conexão
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(1000);
             int i = 0;
-            while (i < 5){
+            while (i < 25){
                 try {
                     socket.send(outPacket);
                     socket.receive(inPacket);
-                    i = 5;
+                    i = 25;
                 }
                 catch (SocketTimeoutException e) {
                     i++;
@@ -45,7 +45,6 @@ public class FTRapidClient implements Runnable{
             List<FileInfo> fis = new ArrayList<>();
             while (bis.read() != 0) {
                 FileInfo fi = FileInfo.deserialize(bis);
-                System.out.println(fi.toString());
                 fis.add(fi);
             }
 
@@ -56,8 +55,8 @@ public class FTRapidClient implements Runnable{
             InetAddress ip = outPacket.getAddress();
             String resultado = "Obrigado";
             System.out.println("Agradecer ao IP " + ip.toString() + " na porta " + port);
-            DatagramPacket outPacket2 = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
-            socket.send(outPacket2);
+            outPacket = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
+            socket.send(outPacket);
             socket.close();
         }
         catch (IOException e) {

@@ -44,13 +44,13 @@ public class ServerWorker implements Runnable{
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
             
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(1000);
             int i = 0;
-            while (i < 5){
+            while (i < 25){
                 try {
                     socket.send(sendPacket);
                     socket.receive(this.received);
-                    i = 5;
+                    i = 25;
                 }
                 catch (SocketTimeoutException e) {
                     i++;
