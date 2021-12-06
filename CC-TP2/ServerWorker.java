@@ -36,14 +36,16 @@ public class ServerWorker implements Runnable{
             for (File f  : subFicheiros) {
                 BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
                 FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
-                bos.write(fi.serialize());
                 bos.write('+');
+                bos.write(fi.serialize());
             }
             bos.write(0);
             byte[] data = bos.toByteArray();
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
             
+            byte[] indata = new byte[1300];
+            this.received = new DatagramPacket(indata, 1300);
             socket.setSoTimeout(1000);
             int i = 0;
             while (i < 25){
