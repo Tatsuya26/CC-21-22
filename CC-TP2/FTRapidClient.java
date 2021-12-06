@@ -40,25 +40,18 @@ public class FTRapidClient implements Runnable{
                     i++;
                 }
             }
-            //print na consola o que foi recebido(a bunch of 0??)
-            //for (Byte b : inPacket.getData()) System.out.print(b);
 
-            //deserialize info from other per
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-            //List<FileInfo> fis = new ArrayList<>();
-            //while (bis.read() == '+') {
+            List<FileInfo> fis = new ArrayList<>();
+            while (bis.read() != 0) {
                 FileInfo fi = FileInfo.deserialize(bis);
                 System.out.println(fi.toString());
-              //  fis.add(fi);
-            //}
+                fis.add(fi);
+            }
 
-            //:FIXME : O PACOTE QUE VEM DA SOCKET VEM COM LIXO O QUE NAO PERMITE FAZER BEM O PARSING
-            //          Testa assim e se nao der, tenta ver onde os bytes mudam.
-            //          O + sinaliza que ainda há ficheiros para serem transferidos
-
-            //for (FileInfo f : fis)   System.out.println(f.toString());
-            
             //print na consola para verificar se o que foi enviado está correto
+            for (FileInfo f : fis)   System.out.println(f.toString());
+            
             int port = outPacket.getPort();
             InetAddress ip = outPacket.getAddress();
             String resultado = "Obrigado";

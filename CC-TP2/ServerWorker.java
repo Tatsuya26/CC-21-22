@@ -39,13 +39,11 @@ public class ServerWorker implements Runnable{
                 bos.write(fi.serialize());
                 bos.write('+');
             }
-            bos.write(Byte.parseByte("+123"));
+            bos.write(0);
             byte[] data = bos.toByteArray();
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
-            /*for (byte b : data) {
-                System.out.print(b);
-            }*/
+            
             socket.setSoTimeout(5000);
             int i = 0;
             while (i < 5){
