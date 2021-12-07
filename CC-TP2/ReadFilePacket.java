@@ -27,12 +27,11 @@ public class ReadFilePacket {
 
     public static ReadFilePacket deserialize(ByteArrayInputStream bis) throws IOException{
         DataInputStream dis = new DataInputStream(bis);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte b;
-        StringBuilder sb = new StringBuilder();
-        while ((b = dis.readByte()) != 0) {
-            sb.append(b);
-        }
-        String filename = sb.toString();
+        while((b = dis.readByte()) != 0)
+            bos.write(b);
+        String filename = new String(bos.toByteArray());
         return new ReadFilePacket(filename);
     }
 }
