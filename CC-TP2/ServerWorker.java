@@ -100,7 +100,10 @@ public class ServerWorker implements Runnable{
 
     public void sendFile(ReadFilePacket readFile,DatagramSocket socket,InetAddress clientIP,int port) throws IOException{
         File f = new File(readFile.getFileName());
-        System.out.println("Recebido pedido de leitura para o ficheiro " + f.getName());
+        if (!f.exists()) {
+            f.createNewFile();
+        }
+        System.out.println("Recebido pedido de leitura para o ficheiro " + readFile.getFileName());
         FileInputStream fis = new FileInputStream(f);
         int numB = 1;
         while(fis.available() > 0) {
