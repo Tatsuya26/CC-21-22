@@ -56,15 +56,16 @@ public class ServerWorker implements Runnable{
                     int opcode = bis.read();
                     if (opcode == 2) {
                         ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
-                        sendFile(readFile,socket,clientIP,port);
+                        sendFile(readFile,clientIP,port);
+                        System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");
                         FINPacket fin = new FINPacket();
-                        sendPacket = new DatagramPacket(fin.serialize(), 1);
+                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length);
                     }
 
                     if (opcode == 5 || opcode == 6) {
                         System.out.println("Recebido pedido de fim de conexão");
                         FINPacket fin = new FINPacket();
-                        sendPacket = new DatagramPacket(fin.serialize(), 1,clientIP,port);
+                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
                         socket.send(sendPacket);
                         i = 25;
                     }
@@ -98,11 +99,8 @@ public class ServerWorker implements Runnable{
         return new DataTransferPacket(1,data.length, data);
     }
 
-    public void sendFile(ReadFilePacket readFile,DatagramSocket socket,InetAddress clientIP,int port) throws IOException{
+    public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         File f = new File(readFile.getFileName());
-        if (!f.exists()) {
-            f.createNewFile();
-        }
         System.out.println("Recebido pedido de leitura para o ficheiro " + readFile.getFileName());
         FileInputStream fis = new FileInputStream(f);
         int numB = 1;
@@ -110,9 +108,9 @@ public class ServerWorker implements Runnable{
             byte[] fileData = fis.readNBytes(1293);
             DataTransferPacket dtFile = new DataTransferPacket(numB, fileData.length, fileData);
             DatagramPacket sendPacket = new DatagramPacket(dtFile.serialize(),dtFile.serialize().length,clientIP,port);
-            socket.send(sendPacket);
             boolean verificado = false;
             while (!verificado) {
+                socket.send(sendPacket);
                 byte[] indata = new byte[1300];
                 DatagramPacket inPacket = new DatagramPacket(indata,1300);
                 socket.receive(inPacket);

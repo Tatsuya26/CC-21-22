@@ -91,6 +91,7 @@ public class FTRapidClient implements Runnable{
                 socket.setSoTimeout(1000);
                 int i = 0;
                 File ficheiro = new File(filename);
+                if (!ficheiro.exists()) ficheiro.createNewFile();
                 FileOutputStream fos = new FileOutputStream(ficheiro,false);
                 while (i < 25) {
                     socket.send(outPacket);

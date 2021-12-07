@@ -7,7 +7,7 @@ public class FINPacket {
 
     public byte[] serialize() {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bos.write(5);
+        bos.write(FINPacket.opcode);
         return bos.toByteArray();
     }
 }
