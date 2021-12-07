@@ -23,7 +23,7 @@ public class FTRapidClient implements Runnable{
     public void run() {
         try{
             byte[] indata = new byte[1300];
-            byte[] outdata = new byte[1300];
+            byte[] outdata;
             DatagramSocket socket = new DatagramSocket();
             RQFileInfoPacket request = new RQFileInfoPacket();
             outdata = request.serialize();

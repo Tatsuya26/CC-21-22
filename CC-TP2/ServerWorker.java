@@ -34,7 +34,11 @@ public class ServerWorker implements Runnable{
 
             byte opcode = this.received.getData()[0];
             byte[] data = new byte[1300];
-            if (opcode == 1) data = getFileInfo();
+            if (opcode == 1) {
+                DataTransferPacket dataPacket = getFileInfo();
+                data = dataPacket.serialize();
+                System.out.println("Recebido pedido de ficheiros");
+            }
             
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
             
@@ -59,7 +63,7 @@ public class ServerWorker implements Runnable{
     }
 
 
-    public byte[] getFileInfo() throws IOException{
+    public DataTransferPacket getFileInfo() throws IOException{
         //Criar array com todos os ficheiros da diretoria;
         File[] subFicheiros = folder.listFiles();
         //Abrir stream onde escrevemos os bytes;
@@ -73,6 +77,7 @@ public class ServerWorker implements Runnable{
         }
         // O byte 0 indica que não temos mais dados;
         bos.write(0);
-        return bos.toByteArray();
+        byte[] data = bos.toByteArray();
+        return new DataTransferPacket((short)1,(short) data.length, data);
     }
 }

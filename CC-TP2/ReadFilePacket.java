@@ -26,7 +26,6 @@ public class ReadFilePacket {
 
     public static ReadFilePacket deserialize(ByteArrayInputStream bis) throws IOException{
         DataInputStream dis = new DataInputStream(bis);
-        byte opcode = dis.readByte();
         String filename = dis.readUTF();
         return new ReadFilePacket(filename);
     }

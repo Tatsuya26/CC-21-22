@@ -41,7 +41,6 @@ public class DataTransferPacket {
 
     public static DataTransferPacket deserialize(ByteArrayInputStream bis) throws IOException{
         DataInputStream dis = new DataInputStream(bis);
-        byte opcode = dis.readByte();
         short nB = dis.readShort();
         short length = dis.readShort();
         byte[] data = dis.readNBytes(length);

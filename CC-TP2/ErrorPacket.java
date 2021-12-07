@@ -34,7 +34,6 @@ public class ErrorPacket {
 
     public static ErrorPacket deserialize(ByteArrayInputStream bis) throws IOException{
         DataInputStream dis = new DataInputStream(bis);
-        byte opcode = dis.readByte();
         byte error = dis.readByte();
         String descricao = dis.readUTF();
         return new ErrorPacket(error, descricao);
