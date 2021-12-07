@@ -31,18 +31,12 @@ public class ServerWorker implements Runnable{
         try {
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            File[] subFicheiros = folder.listFiles();
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            for (File f  : subFicheiros) {
-                BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-                FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
-                bos.write('+');
-                bos.write(fi.serialize());
-            }
-            bos.write(0);
-            byte[] data = bos.toByteArray();
+
+            byte opcode = this.received.getData()[0];
+            byte[] data = new byte[1300];
+            if (opcode == 1) data = getFileInfo();
+            
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
-            System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
             
             byte[] indata = new byte[1300];
             this.received = new DatagramPacket(indata, 1300);
@@ -58,11 +52,27 @@ public class ServerWorker implements Runnable{
                     i++;
                 }
             }
-            System.out.println("Server here!");
-            System.out.println(new String(this.received.getData()));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+
+    public byte[] getFileInfo() throws IOException{
+        //Criar array com todos os ficheiros da diretoria;
+        File[] subFicheiros = folder.listFiles();
+        //Abrir stream onde escrevemos os bytes;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
+        for (File f  : subFicheiros) {
+            BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+            FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
+            bos.write('+');
+            bos.write(fi.serialize());
+        }
+        // O byte 0 indica que não temos mais dados;
+        bos.write(0);
+        return bos.toByteArray();
     }
 }

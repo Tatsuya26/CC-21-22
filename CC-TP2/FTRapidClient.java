@@ -8,6 +8,8 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.crypto.Data;
+
 public class FTRapidClient implements Runnable{
     public final static int length = 1300;
     public File folder;
@@ -23,13 +25,15 @@ public class FTRapidClient implements Runnable{
             byte[] indata = new byte[1300];
             byte[] outdata = new byte[1300];
             DatagramSocket socket = new DatagramSocket();
-            outdata = new String("Pedido de ficheiros").getBytes();
+            RQFileInfoPacket request = new RQFileInfoPacket();
+            outdata = request.serialize();
             DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
             DatagramPacket inPacket = new DatagramPacket(indata, 1300);
             
             //timeout até haver conexão
             socket.setSoTimeout(1000);
             int i = 0;
+            // Esperamos 25 segundos até obter resposta. Devemos encontrar um tempo ótimo.
             while (i < 25){
                 try {
                     socket.send(outPacket);
@@ -42,19 +46,15 @@ public class FTRapidClient implements Runnable{
             }
 
             ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-            List<FileInfo> fis = new ArrayList<>();
-            while (bis.read() != 0) {
-                FileInfo fi = FileInfo.deserialize(bis);
-                fis.add(fi);
+            if (bis.read() == 3) {
+                DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                List<FileInfo> fis = readFileInfos(data);
+                for (FileInfo f : fis) System.out.println(f.toString());
             }
-
-            //print na consola para verificar se o que foi enviado está correto
-            for (FileInfo f : fis)   System.out.println(f.toString());
             
             int port = inPacket.getPort();
             InetAddress ip = inPacket.getAddress();
-            String resultado = "Obrigado";
-            System.out.println("Agradecer ao IP " + ip.toString() + " na porta " + port);
+            String resultado = "Ficheiros recebidos com sucesso";
             outPacket = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
             socket.send(outPacket);
             socket.close();
@@ -62,5 +62,18 @@ public class FTRapidClient implements Runnable{
         catch (IOException e) {
              e.printStackTrace();
         }
+    }
+
+    public List<FileInfo> readFileInfos (DataTransferPacket data) throws IOException{
+        //Abrimos stream para leitura do array de bytes vindo do packet;
+        ByteArrayInputStream bis = new ByteArrayInputStream(data.getData());
+        // Lista onde armazenamos a informação dos ficheiros;
+        List<FileInfo> fis = new ArrayList<>();
+        //Lemos até ao byte 0;
+        while (bis.read() != 0) {
+            FileInfo fi = FileInfo.deserialize(bis);
+            fis.add(fi);
+        }
+        return fis;
     }
 }
