@@ -1,5 +1,6 @@
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,8 +8,6 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.crypto.Data;
 
 public class FTRapidClient implements Runnable{
     public final static int length = 1300;
@@ -38,25 +37,29 @@ public class FTRapidClient implements Runnable{
                 try {
                     socket.send(outPacket);
                     socket.receive(inPacket);
-                    i = 25;
+                    int port = inPacket.getPort();
+                    InetAddress ip = inPacket.getAddress();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                    if (bis.read() == 3) {
+                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                        List<FileInfo> fis = readFileInfos(data);
+                        getFiles(fis,ip,port,socket);
+                        FINPacket fin = new FINPacket();
+                        outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
+                        socket.send(outPacket);
+                    }
+                    if (bis.read() == 5) {
+                        System.out.println("Recebido pedido de fim de conexão");
+                        FINPacket fin = new FINPacket();
+                        outPacket = new DatagramPacket(fin.serialize(), 1,ip,port);
+                        socket.send(outPacket);
+                        i = 25;
+                    }
                 }
                 catch (SocketTimeoutException e) {
                     i++;
                 }
             }
-
-            ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-            if (bis.read() == 3) {
-                DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                List<FileInfo> fis = readFileInfos(data);
-                for (FileInfo f : fis) System.out.println(f.toString());
-            }
-            
-            int port = inPacket.getPort();
-            InetAddress ip = inPacket.getAddress();
-            String resultado = "Ficheiros recebidos com sucesso";
-            outPacket = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
-            socket.send(outPacket);
             socket.close();
         }
         catch (IOException e) {
@@ -75,5 +78,42 @@ public class FTRapidClient implements Runnable{
             fis.add(fi);
         }
         return fis;
+    }
+
+    public void getFiles(List<FileInfo> fis, InetAddress ip,int port,DatagramSocket socket) {
+        try {
+            for (FileInfo f: fis) {
+                String filename = f.getName();
+                ReadFilePacket readFile = new ReadFilePacket(filename);
+                DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,port);
+                byte[] indata = new byte[1300];
+                DatagramPacket inPacket = new DatagramPacket(indata, 1300);
+                socket.setSoTimeout(1000);
+                int i = 0;
+                File ficheiro = new File(filename);
+                FileOutputStream fos = new FileOutputStream(ficheiro,false);
+                while (i < 25) {
+                    socket.send(outPacket);
+                    socket.receive(inPacket);
+                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                    if (bis.read() == 3) {
+                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                        ACKPacket ack = new ACKPacket(data.getNumBloco());
+                        fos.write(data.getData(),0,data.getLengthData());
+                        outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
+                    }
+                    if (bis.read() == 5) {
+                        i = 25;
+                        FINPacket fin = new FINPacket();
+                        outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
+                        //socket.send(outPacket);
+                    }
+                }
+                fos.close();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

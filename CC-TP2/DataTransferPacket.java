@@ -11,9 +11,9 @@ public class DataTransferPacket {
     public short lengthData;
     public byte[] data;
 
-    public DataTransferPacket(short numBloco,short length,byte[] data) {
-        this.numeroBloco = numBloco;
-        this.lengthData = length;
+    public DataTransferPacket(int numBloco,int length,byte[] data) {
+        this.numeroBloco = (short) numBloco;
+        this.lengthData = (short) length;
         this.data = data;
     }
 

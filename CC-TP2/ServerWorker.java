@@ -1,5 +1,7 @@
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -32,9 +34,9 @@ public class ServerWorker implements Runnable{
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
 
-            byte opcode = this.received.getData()[0];
+            byte opcode1 = this.received.getData()[0];
             byte[] data = new byte[1300];
-            if (opcode == 1) {
+            if (opcode1 == 1) {
                 DataTransferPacket dataPacket = getFileInfo();
                 data = dataPacket.serialize();
                 System.out.println("Recebido pedido de ficheiros");
@@ -50,7 +52,22 @@ public class ServerWorker implements Runnable{
                 try {
                     socket.send(sendPacket);
                     socket.receive(this.received);
-                    i = 25;
+                    ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
+                    int opcode = bis.read();
+                    if (opcode == 2) {
+                        ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                        sendFile(readFile,socket,clientIP,port);
+                        FINPacket fin = new FINPacket();
+                        sendPacket = new DatagramPacket(fin.serialize(), 1);
+                    }
+
+                    if (opcode == 5 || opcode == 6) {
+                        System.out.println("Recebido pedido de fim de conexão");
+                        FINPacket fin = new FINPacket();
+                        sendPacket = new DatagramPacket(fin.serialize(), 1,clientIP,port);
+                        socket.send(sendPacket);
+                        i = 25;
+                    }
                 }
                 catch (SocketTimeoutException e) {
                     i++;
@@ -78,6 +95,35 @@ public class ServerWorker implements Runnable{
         // O byte 0 indica que não temos mais dados;
         bos.write(0);
         byte[] data = bos.toByteArray();
-        return new DataTransferPacket((short)1,(short) data.length, data);
+        return new DataTransferPacket(1,data.length, data);
+    }
+
+    public void sendFile(ReadFilePacket readFile,DatagramSocket socket,InetAddress clientIP,int port) throws IOException{
+        File f = new File(readFile.getFileName());
+        System.out.println("Recebido pedido de leitura para o ficheiro " + f.getName());
+        FileInputStream fis = new FileInputStream(f);
+        int numB = 1;
+        while(fis.available() > 0) {
+            byte[] fileData = fis.readNBytes(1293);
+            DataTransferPacket dtFile = new DataTransferPacket(numB, fileData.length, fileData);
+            DatagramPacket sendPacket = new DatagramPacket(dtFile.serialize(),dtFile.serialize().length,clientIP,port);
+            socket.send(sendPacket);
+            boolean verificado = false;
+            while (!verificado) {
+                byte[] indata = new byte[1300];
+                DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                socket.receive(inPacket);
+                ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                int opcode = bis.read();
+                if (opcode == 6) {
+                    ACKPacket ack = ACKPacket.deserialize(bis);
+                    if (ack.getNumBloco() == numB) {
+                        verificado = true;
+                        numB++;
+                    }
+                }
+            }
+        }
+        fis.close();
     }
 }

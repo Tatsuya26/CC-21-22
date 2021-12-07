@@ -20,13 +20,19 @@ public class ReadFilePacket {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeByte(ReadFilePacket.opcode);
-        dos.writeUTF(this.filename);
+        dos.writeBytes(this.filename);
+        dos.writeByte(0);
         return bos.toByteArray();
     }
 
     public static ReadFilePacket deserialize(ByteArrayInputStream bis) throws IOException{
         DataInputStream dis = new DataInputStream(bis);
-        String filename = dis.readUTF();
+        byte b;
+        StringBuilder sb = new StringBuilder();
+        while ((b = dis.readByte()) != 0) {
+            sb.append(b);
+        }
+        String filename = sb.toString();
         return new ReadFilePacket(filename);
     }
 }
