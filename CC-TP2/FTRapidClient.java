@@ -94,7 +94,7 @@ public class FTRapidClient implements Runnable{
                 Path parent = file.getParent().getParent();
                 file = parent.relativize(file);
                 Path path = folder.toPath().getParent();
-                file = file.resolve(path);
+                file = path.resolve(file);
                 parent = file.getParent();
                 System.out.println(file.toString());
                 File parentFile = parent.toFile();
