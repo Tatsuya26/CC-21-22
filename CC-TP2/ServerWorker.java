@@ -62,7 +62,7 @@ public class ServerWorker implements Runnable{
                         sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
                     }
 
-                    if (opcode == 5 || opcode == 6) {
+                    if (opcode == 5) {
                         System.out.println("Recebido pedido de fim de conexão");
                         FINPacket fin = new FINPacket();
                         sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
