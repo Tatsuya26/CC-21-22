@@ -89,7 +89,8 @@ public class ServerWorker implements Runnable{
         //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
         for (File f  : subFicheiros) {
             BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-            FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
+            String filename = new String(folder.getName()).concat("/").concat(f.getName());
+            FileInfo fi = new FileInfo(filename,Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
             bos.write('+');
             bos.write(fi.serialize());
         }
