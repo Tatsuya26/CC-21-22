@@ -59,7 +59,7 @@ public class ServerWorker implements Runnable{
                         sendFile(readFile,clientIP,port);
                         System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");
                         FINPacket fin = new FINPacket();
-                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length);
+                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
                     }
 
                     if (opcode == 5 || opcode == 6) {
