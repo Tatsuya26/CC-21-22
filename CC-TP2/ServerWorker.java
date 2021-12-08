@@ -55,6 +55,7 @@ public class ServerWorker implements Runnable{
                     ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
                     int opcode = bis.read();
                     if (opcode == 2) {
+                        
                         ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
                         sendFile(readFile,clientIP,port);
                         System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");

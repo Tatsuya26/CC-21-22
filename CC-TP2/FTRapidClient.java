@@ -100,14 +100,15 @@ public class FTRapidClient implements Runnable{
                         DatagramPacket inPacket = new DatagramPacket(indata, 1300);
                         socket.receive(inPacket);
                         ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-                        if (bis.read() == 3) {
+                        int opcode = bis.read();
+                        if (opcode == 3) {
                             DataTransferPacket data = DataTransferPacket.deserialize(bis);
                             ACKPacket ack = new ACKPacket(data.getNumBloco());
                             fos.write(data.getData(),0,data.getLengthData());
                             System.out.println("Enviar ACK ao bloco " + ack.getNumBloco());
                             outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
                         }
-                        if (bis.read() == 5) {
+                        if (opcode == 5) {
                             System.out.println("Recebido FIN");
                             i = 25;
                         }
