@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +90,16 @@ public class FTRapidClient implements Runnable{
                 ReadFilePacket readFile = new ReadFilePacket(filename);
                 DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,port);
                 int i = 0;
-                File ficheiro = new File(filename);
+                Path file = Path.of(filename);
+                Path parent = file.getParent().getParent();
+                file = file.relativize(parent);
+                Path path = folder.toPath().getParent();
+                file = file.resolve(path);
+                parent = file.getParent();
+                System.out.println(file.toString());
+                File parentFile = parent.toFile();
+                if (!parentFile.exists()) parentFile.mkdir();
+                File ficheiro = file.toFile();
                 if (!ficheiro.exists()) ficheiro.createNewFile();
                 FileOutputStream fos = new FileOutputStream(ficheiro,false);
                 socket.setSoTimeout(1000);
