@@ -95,21 +95,24 @@ public class FTRapidClient implements Runnable{
                 if (!ficheiro.exists()) ficheiro.createNewFile();
                 FileOutputStream fos = new FileOutputStream(ficheiro,false);
                 while (i < 25) {
-                    socket.send(outPacket);
-                    socket.receive(inPacket);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-                    if (bis.read() == 3) {
-                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                        ACKPacket ack = new ACKPacket(data.getNumBloco());
-                        fos.write(data.getData(),0,data.getLengthData());
-                        outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
+                    try {
+                        socket.send(outPacket);
+                        socket.receive(inPacket);
+                        ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                        if (bis.read() == 3) {
+                            DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                            ACKPacket ack = new ACKPacket(data.getNumBloco());
+                            fos.write(data.getData(),0,data.getLengthData());
+                            outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
+                        }
+                        if (bis.read() == 5) {
+                            i = 25;
+                        }
                     }
-                    if (bis.read() == 5) {
-                        i = 25;
-                        FINPacket fin = new FINPacket();
-                        outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
-                        //socket.send(outPacket);
+                    catch (SocketTimeoutException e) {
+                        i++;
                     }
+
                 }
                 fos.close();
             }
