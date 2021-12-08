@@ -43,6 +43,7 @@ public class FTRapidClient implements Runnable{
                     if (bis.read() == 3) {
                         DataTransferPacket data = DataTransferPacket.deserialize(bis);
                         List<FileInfo> fis = readFileInfos(data);
+                        System.out.println("Vamos transferir " + fis.size() + " ficheiros");
                         getFiles(fis,ip,port,socket);
                         FINPacket fin = new FINPacket();
                         outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
@@ -84,19 +85,19 @@ public class FTRapidClient implements Runnable{
         try {
             for (FileInfo f: fis) {
                 String filename = f.getName();
+                System.out.println("A pedir o ficheiro " + filename);
                 ReadFilePacket readFile = new ReadFilePacket(filename);
                 DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,port);
-                byte[] indata = new byte[1300];
-                DatagramPacket inPacket = new DatagramPacket(indata, 1300);
-                socket.setSoTimeout(1000);
                 int i = 0;
                 File ficheiro = new File(filename);
-                System.out.println(filename);
                 if (!ficheiro.exists()) ficheiro.createNewFile();
                 FileOutputStream fos = new FileOutputStream(ficheiro,false);
+                socket.setSoTimeout(1000);
                 while (i < 25) {
                     try {
                         socket.send(outPacket);
+                        byte[] indata = new byte[1300];
+                        DatagramPacket inPacket = new DatagramPacket(indata, 1300);
                         socket.receive(inPacket);
                         ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
                         if (bis.read() == 3) {

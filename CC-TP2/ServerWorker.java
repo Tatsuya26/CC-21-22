@@ -105,6 +105,7 @@ public class ServerWorker implements Runnable{
         System.out.println("Recebido pedido de leitura para o ficheiro " + readFile.getFileName());
         FileInputStream fis = new FileInputStream(f);
         int numB = 1;
+        socket.setSoTimeout(1000);
         while(fis.available() > 0) {
             byte[] fileData = fis.readNBytes(1293);
             DataTransferPacket dtFile = new DataTransferPacket(numB, fileData.length, fileData);
