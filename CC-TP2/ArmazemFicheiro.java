@@ -20,6 +20,7 @@ public class ArmazemFicheiro {
 
     public ArmazemFicheiro(File diretoria) {
         this.lock = new ReentrantLock();
+        this.ficheiros = new HashMap<>();
         File[] subFicheiros = diretoria.listFiles();
         try {
             for (File f  : subFicheiros) {
