@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ClientFileRequester implements Runnable{
     private InetAddress ip;
@@ -68,7 +69,7 @@ public class ClientFileRequester implements Runnable{
             file = parent.relativize(file);
             Path path = Path.of(folder.getAbsolutePath()).getParent();
             System.out.println("File "+ file.toString());
-            System.out.println("Path "+ path.toString());
+            System.out.println("Path "+ folder.getAbsolutePath());
             file = path.resolve(file);
             fi.setFileName(file.toString());
             fi.setIP(ip);
