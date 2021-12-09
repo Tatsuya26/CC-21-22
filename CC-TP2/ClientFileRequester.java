@@ -66,7 +66,7 @@ public class ClientFileRequester implements Runnable{
             Path file = Path.of(filename);
             Path parent = file.getParent().getParent();
             file = parent.relativize(file);
-            Path path = folder.toPath().getParent();
+            Path path = Path.of(folder.getAbsolutePath()).getParent();
             System.out.println("File "+ file.toString());
             System.out.println("Path "+ path.toString());
             file = path.resolve(file);
