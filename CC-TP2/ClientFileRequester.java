@@ -63,13 +63,6 @@ public class ClientFileRequester implements Runnable{
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getData());
         while (bis.read() != 0) {
             FileInfo fi = FileInfo.deserialize(bis);
-            String filename = fi.getName();
-            Path file = Path.of(filename);
-            Path parent = file.getParent().getParent();
-            file = parent.relativize(file);
-            Path path = Path.of(folder.getAbsolutePath()).getParent();
-            file = path.resolve(file);
-            fi.setFileName(file.toString());
             fi.setIP(ip);
             this.af.adicionaFileInfo(fi);
         }
