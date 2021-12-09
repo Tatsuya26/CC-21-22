@@ -48,7 +48,7 @@ public class ServerWorker implements Runnable{
             }*/
             socket.setSoTimeout(5000);
             int i = 0;
-            while (i < 5){
+            while (i < 5) {
                 try {
                     socket.send(sendPacket);
                     socket.receive(this.received);
