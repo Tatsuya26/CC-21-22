@@ -14,23 +14,33 @@ public class FTRapidClient implements Runnable{
     public final static int length = 1300;
     public File folder;
     public InetAddress[] ips;
+    public ArmazemFicheiro ficheirosSincronizar;
 
     public FTRapidClient(File folder,InetAddress[] ips) {
         this.folder = folder;
         this.ips = ips;
+        this.ficheirosSincronizar = new ArmazemFicheiro(this.folder);
     }
 
     public void run() {
         try{
-            byte[] indata = new byte[1300];
-            byte[] outdata;
             DatagramSocket socket = new DatagramSocket();
-            RQFileInfoPacket request = new RQFileInfoPacket();
-            outdata = request.serialize();
-            DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
-            DatagramPacket inPacket = new DatagramPacket(indata, 1300);
-            
-            //timeout até haver conexão
+            Thread[] threads = new Thread[ips.length];
+            int t = 0;
+            for (InetAddress i : this.ips) {
+                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar));
+                threads[t].start();
+                t++;
+            }
+
+            for (Thread th : threads) th.join();
+
+            List<FileInfo> fis = this.ficheirosSincronizar.getList();
+
+            for (FileInfo f : fis) {
+                System.out.println(f.toString());
+            }
+            /*//timeout até haver conexão
             socket.setSoTimeout(1000);
             int i = 0;
             // Esperamos 25 segundos até obter resposta. Devemos encontrar um tempo ótimo.
@@ -48,12 +58,11 @@ public class FTRapidClient implements Runnable{
                         getFiles(fis,ip,port,socket);
                         FINPacket fin = new FINPacket();
                         outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
-                        socket.send(outPacket);
                     }
                     if (bis.read() == 5) {
                         System.out.println("Recebido pedido de fim de conexão");
                         FINPacket fin = new FINPacket();
-                        outPacket = new DatagramPacket(fin.serialize(), 1,ip,port);
+                        outPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,ip,port);
                         socket.send(outPacket);
                         i = 25;
                     }
@@ -62,9 +71,10 @@ public class FTRapidClient implements Runnable{
                     i++;
                 }
             }
+            */
             socket.close();
         }
-        catch (IOException e) {
+        catch (IOException | InterruptedException e) {
              e.printStackTrace();
         }
     }
@@ -119,7 +129,6 @@ public class FTRapidClient implements Runnable{
                             outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
                         }
                         if (opcode == 5) {
-                            System.out.println("Recebido FIN");
                             i = 25;
                         }
                     }

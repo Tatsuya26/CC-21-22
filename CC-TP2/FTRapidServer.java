@@ -15,16 +15,18 @@ public class FTRapidServer implements Runnable{
     }
     
     public void run() {
-        byte[] buffer = new byte[length];
         try {
-            DatagramSocket serverSocket = new DatagramSocket(80);
-            DatagramPacket receiver = new DatagramPacket(buffer, length);
-            serverSocket.receive(receiver);
-            Thread executante = new Thread(new ServerWorker(receiver,folder,ips));
-            executante.start();
-            serverSocket.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
+            byte[] buffer = new byte[length];
+            while (true) {
+                DatagramSocket serverSocket = new DatagramSocket(80);
+                DatagramPacket receiver = new DatagramPacket(buffer, length);
+                serverSocket.receive(receiver);
+                Thread executante = new Thread(new ServerWorker(receiver,folder,ips));
+                executante.start();
+                serverSocket.close();
+            }
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }

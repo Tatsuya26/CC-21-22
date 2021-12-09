@@ -7,9 +7,9 @@ import java.io.IOException;
 public class DataTransferPacket {
     public static final byte opcode = 3;
 
-    public short numeroBloco;
-    public short lengthData;
-    public byte[] data;
+    private short numeroBloco;
+    private short lengthData;
+    private byte[] data;
 
     public DataTransferPacket(int numBloco,int length,byte[] data) {
         this.numeroBloco = (short) numBloco;

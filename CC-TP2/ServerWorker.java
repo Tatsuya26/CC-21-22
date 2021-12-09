@@ -33,49 +33,26 @@ public class ServerWorker implements Runnable{
         try {
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-
-            byte opcode1 = this.received.getData()[0];
-            byte[] data = new byte[1300];
-            if (opcode1 == 1) {
-                DataTransferPacket dataPacket = getFileInfo();
-                data = dataPacket.serialize();
-                System.out.println("Recebido pedido de ficheiros");
-            }
-            
-            DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
-            
-            byte[] indata = new byte[1300];
-            this.received = new DatagramPacket(indata, 1300);
+            DatagramPacket outPacket;
             socket.setSoTimeout(1000);
             int i = 0;
             while (i < 25){
                 try {
-                    socket.send(sendPacket);
-                    socket.receive(this.received);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
-                    int opcode = bis.read();
-                    if (opcode == 2) {
-
-                        ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
-                        sendFile(readFile,clientIP,port);
-                        System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");
-                        FINPacket fin = new FINPacket();
-                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
-                    }
-                    
-                    //TODO : Meter os FIN a terminar o programar. Criar uma flag para ver se já recebemos ou enviamos um FIN.
-                    if (opcode == 5) {
-                        System.out.println("Recebido pedido de fim de conexão");
-                        FINPacket fin = new FINPacket();
-                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
-                        socket.send(sendPacket);
-                        i = 25;
-                    }
+                    outPacket = interpretadorPacket(clientIP,port);
+                    socket.send(outPacket);
+                    byte[] indata = new byte[1300];
+                    DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                    socket.receive(inPacket);
+                    this.received = inPacket;
                 }
                 catch (SocketTimeoutException e) {
                     i++;
                 }
+                catch (IOException e) {
+                    i = 25;
+                }
             }
+            socket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -83,23 +60,33 @@ public class ServerWorker implements Runnable{
     }
 
 
-    public DataTransferPacket getFileInfo() throws IOException{
+    public void sendFileInfo(InetAddress ip,int port) throws IOException{
         //Criar array com todos os ficheiros da diretoria;
         File[] subFicheiros = folder.listFiles();
         //Abrir stream onde escrevemos os bytes;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        int numB = 1;
         //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
         for (File f  : subFicheiros) {
             BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
             String filename = f.getAbsolutePath();
-            FileInfo fi = new FileInfo(filename,Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
+            FileInfo fi = new FileInfo(filename,Long.toString(fa.lastModifiedTime().toMillis()));
+            if ((bos.size() + fi.serialize().length + 1) > 1292) {
+                bos.write(0);
+                byte[] data = bos.toByteArray();
+                DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length, data);
+                sendDataPacket(fileInfos, ip, port);
+                bos.close();
+                bos = new ByteArrayOutputStream();
+            }
             bos.write('+');
             bos.write(fi.serialize());
         }
         // O byte 0 indica que não temos mais dados;
         bos.write(0);
         byte[] data = bos.toByteArray();
-        return new DataTransferPacket(1,data.length, data);
+        DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length, data);
+        sendDataPacket(fileInfos, ip, port);
     }
 
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
@@ -111,24 +98,49 @@ public class ServerWorker implements Runnable{
         while(fis.available() > 0) {
             byte[] fileData = fis.readNBytes(1293);
             DataTransferPacket dtFile = new DataTransferPacket(numB, fileData.length, fileData);
-            DatagramPacket sendPacket = new DatagramPacket(dtFile.serialize(),dtFile.serialize().length,clientIP,port);
-            boolean verificado = false;
-            while (!verificado) {
-                socket.send(sendPacket);
-                byte[] indata = new byte[1300];
-                DatagramPacket inPacket = new DatagramPacket(indata,1300);
-                socket.receive(inPacket);
-                ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-                int opcode = bis.read();
-                if (opcode == 6) {
-                    ACKPacket ack = ACKPacket.deserialize(bis);
-                    if (ack.getNumBloco() == numB) {
-                        verificado = true;
-                        numB++;
-                    }
+            sendDataPacket(dtFile, clientIP, port);
+        }
+        fis.close();
+    }
+
+    public void sendDataPacket (DataTransferPacket data,InetAddress ip, int port) throws IOException{
+        boolean verificado = false;
+        while (!verificado) {
+            socket.send(new DatagramPacket(data.serialize(), data.serialize().length,ip,port));
+            byte[] indata = new byte[1300];
+            DatagramPacket inPacket = new DatagramPacket(indata,1300);
+            socket.receive(inPacket);
+            ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+            int opcode = bis.read();
+            if (opcode == 6) {
+                ACKPacket ack = ACKPacket.deserialize(bis);
+                if (ack.getNumBloco() == data.getNumBloco()) {
+                    verificado = true;
                 }
             }
         }
-        fis.close();
+    }
+
+    public DatagramPacket interpretadorPacket (InetAddress clientIP,int port) throws IOException{
+        ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
+        int opcode = bis.read();
+        if (opcode == 1) {
+            sendFileInfo(clientIP,port);
+            FINPacket fin = new FINPacket();
+            return new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
+        }
+        if (opcode == 2) {
+            ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+            sendFile(readFile,clientIP,port);
+            System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");
+            FINPacket fin = new FINPacket();
+            return new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
+        }
+        
+        //TODO: Meter os FIN a terminar o programar. Criar uma flag para ver se já recebemos ou enviamos um FIN.
+        if (opcode == 5) {
+            throw new IOException();
+        }
+        throw new IOException();
     }
 }

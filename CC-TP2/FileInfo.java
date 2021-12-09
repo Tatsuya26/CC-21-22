@@ -3,16 +3,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 
 public class FileInfo {
-    public String name;
-    public String time;
-    public String size;
+    private String name;
+    private String time;
+    private InetAddress ip;
 
-    public FileInfo(String nome,String lastMod, String tamanho) {
+
+    public FileInfo(String nome,String lastMod) {
         this.name = nome;
         this.time = lastMod;
-        this.size = tamanho;
     }
 
     public String getName () {
@@ -23,8 +24,13 @@ public class FileInfo {
         return this.time;
     }
 
-    public String getSize() {
-        return this.size;
+
+    public InetAddress getIP() {
+        return this.ip;
+    }
+
+    public void setIP(InetAddress inet) {
+        this.ip = inet;
     }
 
     public byte[] serialize() throws IOException{
@@ -35,8 +41,6 @@ public class FileInfo {
         dos.writeBytes(this.name);
         dos.writeInt(time.length());
         dos.writeBytes(time);
-        dos.writeInt(size.length());
-        dos.writeBytes(size);
         dos.flush();
         info = bos.toByteArray();
         return info;
@@ -48,20 +52,18 @@ public class FileInfo {
         String name = new String(dis.readNBytes(length));
         length = dis.readInt();
         String millis = new String(dis.readNBytes(length));
-        length = dis.readInt();
-        String size = new String(dis.readNBytes(length));
-        return new FileInfo(name, millis, size);
-    }
-
-    public int compareFiles(FileInfo f) {
-        if (this.name.compareTo(f.getName()) == 0) 
-            if (this.time.compareTo(f.getTime()) == 0)
-                if (this.size.compareTo(f.getSize()) == 0)
-                    return 0;
-        return -1;
+        return new FileInfo(name, millis);
     }
 
     public String toString(){
-        return "Nome do ficheiro: " + this.name +"; Ultima alteracao: " + this.time + "; Tamanho do ficheiro: " + this.size; 
+        return "Nome do ficheiro: " + this.name +"; Ultima alteracao: " + this.time + "; IP : " + this.ip; 
+    }
+
+    public long compareTo(FileInfo f) {
+        if (this.name.compareTo(f.getName()) == 0) 
+            if (this.time.compareTo(f.getTime()) == 0) 
+                return 0;
+            else return Long.parseLong(this.time) - Long.parseLong(f.getTime());
+        return -1;
     }
 }
