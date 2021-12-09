@@ -28,7 +28,7 @@ public class FTRapidClient implements Runnable{
             Thread[] threads = new Thread[ips.length];
             int t = 0;
             for (InetAddress i : this.ips) {
-                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar));
+                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar,this.folder));
                 threads[t].start();
                 t++;
             }
@@ -101,12 +101,7 @@ public class FTRapidClient implements Runnable{
                 DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,port);
                 int i = 0;
                 Path file = Path.of(filename);
-                Path parent = file.getParent().getParent();
-                file = parent.relativize(file);
-                Path path = folder.toPath().getParent();
-                file = path.resolve(file);
-                parent = file.getParent();
-                System.out.println(file.toString());
+                Path parent = file.getParent(); 
                 File parentFile = parent.toFile();
                 if (!parentFile.exists()) parentFile.mkdir();
                 File ficheiro = file.toFile();

@@ -29,6 +29,9 @@ public class FileInfo {
         return this.ip;
     }
 
+    public void setFileName (String f) {
+        this.name = f;
+    }
     public void setIP(InetAddress inet) {
         this.ip = inet;
     }

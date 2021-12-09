@@ -1,17 +1,21 @@
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.nio.file.Path;
 
 public class ClientFileRequester implements Runnable{
     private InetAddress ip;
     private ArmazemFicheiro af;
+    private File folder;
 
-    public ClientFileRequester(InetAddress ip,ArmazemFicheiro f) {
+    public ClientFileRequester(InetAddress ip,ArmazemFicheiro f,File ficheiro) {
         this.ip = ip;
         this.af = f;
+        this.folder = ficheiro;
     }
 
     public void run() {
@@ -58,6 +62,13 @@ public class ClientFileRequester implements Runnable{
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getData());
         while (bis.read() != 0) {
             FileInfo fi = FileInfo.deserialize(bis);
+            String filename = fi.getName();
+            Path file = Path.of(filename);
+            Path parent = file.getParent().getParent();
+            file = parent.relativize(file);
+            Path path = folder.toPath().getParent();
+            file = path.resolve(file);
+            fi.setFileName(file.toString());
             fi.setIP(ip);
             this.af.adicionaFileInfo(fi);
         }
