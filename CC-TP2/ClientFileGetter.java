@@ -23,7 +23,6 @@ public class ClientFileGetter implements Runnable{
         try {
             DatagramSocket socket = new DatagramSocket();
             String filename = fi.getName();
-            System.out.println("A pedir o ficheiro " + filename);
             ReadFilePacket readFile = new ReadFilePacket(filename);
             DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,80);
             int i = 0;
@@ -37,6 +36,7 @@ public class ClientFileGetter implements Runnable{
             if (!ficheiro.exists()) ficheiro.createNewFile();
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
             socket.setSoTimeout(1000);
+            System.out.println("A pedir o ficheiro " + filename);
             int numB = 1;
             while (i < 25) {
                 try {
