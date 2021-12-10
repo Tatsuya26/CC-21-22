@@ -55,6 +55,8 @@ public class ClientFileGetter implements Runnable{
                         outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
                     }
                     if (opcode == 5) {
+                        FINPacket fin = new FINPacket();
+                        socket.send(new DatagramPacket(fin.serialize(), fin.serialize().length,ip,port));
                         i = 25;
                     }
                 }

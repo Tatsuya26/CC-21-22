@@ -131,7 +131,6 @@ public class ServerWorker implements Runnable{
         if (opcode == 2) {
             ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
             sendFile(readFile,clientIP,port);
-            System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");
             FINPacket fin = new FINPacket();
             return new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
         }

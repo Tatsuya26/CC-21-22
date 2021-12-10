@@ -24,7 +24,6 @@ public class FTRapidClient implements Runnable{
 
     public void run() {
         try{
-            DatagramSocket socket = new DatagramSocket();
             Thread[] threads = new Thread[ips.length];
             int t = 0;
             for (InetAddress i : this.ips) {
@@ -37,16 +36,19 @@ public class FTRapidClient implements Runnable{
 
             List<FileInfo> fis = this.ficheirosSincronizar.getList();
 
+            threads = new Thread[fis.size()];
             t = 0;
             for (FileInfo fi : fis) {
-                threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
-                threads[t].start();
-                t++;
+                if (fi.getIP() != null) {
+                    threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
+                    threads[t].start();
+                    t++;
+                }
             }
             
             for (Thread th : threads) th.join();
         }
-        catch (IOException | InterruptedException e) {
+        catch (InterruptedException e) {
              e.printStackTrace();
         }
     }
