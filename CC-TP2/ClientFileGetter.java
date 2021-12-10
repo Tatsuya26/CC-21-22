@@ -32,6 +32,7 @@ public class ClientFileGetter implements Runnable{
             file = parent.relativize(file);
             Path path = Path.of(folder.getAbsolutePath()).getParent();
             file = path.resolve(file);
+            parent = file.getParent();
             File parentFile = parent.toFile();
             if (!parentFile.exists()) parentFile.mkdir();
             File ficheiro = file.toFile();

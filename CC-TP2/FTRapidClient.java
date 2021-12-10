@@ -39,11 +39,10 @@ public class FTRapidClient implements Runnable{
             threads = new Thread[fis.size()];
             t = 0;
             for (FileInfo fi : fis) {
-                if (fi.getIP() != null) {
-                    threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
+                threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
+                if (fi.getIP() != null) 
                     threads[t].start();
-                    t++;
-                }
+                t++;
             }
             
             for (Thread th : threads) th.join();
