@@ -28,11 +28,9 @@ public class ClientFileGetter implements Runnable{
             DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,80);
             int i = 0;
             Path file = Path.of(filename);
-            Path parent = file.getParent().getParent();
-            file = parent.relativize(file);
             Path path = Path.of(folder.getAbsolutePath()).getParent();
             file = path.resolve(file);
-            parent = file.getParent();
+            Path parent = file.getParent();
             File parentFile = parent.toFile();
             if (!parentFile.exists()) parentFile.mkdir();
             File ficheiro = file.toFile();
@@ -64,9 +62,9 @@ public class ClientFileGetter implements Runnable{
                 catch (SocketTimeoutException e) {
                     i++;
                 }
+            }
             fos.close();
             socket.close();
-            }
         }
         catch (IOException e) {
             e.printStackTrace();

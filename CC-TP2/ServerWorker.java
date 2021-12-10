@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class ServerWorker implements Runnable{
@@ -70,7 +71,10 @@ public class ServerWorker implements Runnable{
         for (File f  : subFicheiros) {
             BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
             String filename = f.getAbsolutePath();
-            FileInfo fi = new FileInfo(filename,Long.toString(fa.lastModifiedTime().toMillis()));
+            Path file = Path.of(filename);
+            Path parent = file.getParent().getParent();
+            file = parent.relativize(file);
+            FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
             if ((bos.size() + fi.serialize().length + 1) > 1292) {
                 bos.write(0);
                 byte[] data = bos.toByteArray();
