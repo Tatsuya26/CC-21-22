@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,10 @@ public class ArmazemFicheiro {
             for (File f  : subFicheiros) {
                 BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
                 String filename = f.getAbsolutePath();
-                FileInfo fi = new FileInfo(filename,Long.toString(fa.lastModifiedTime().toMillis()));
+                Path file = Path.of(filename);
+                Path parent = file.getParent().getParent();
+                file = parent.relativize(file);
+                FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
                 adicionaFileInfo(fi);
             }
         }
