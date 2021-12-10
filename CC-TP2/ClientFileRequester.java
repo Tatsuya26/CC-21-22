@@ -9,12 +9,10 @@ import java.net.SocketTimeoutException;
 public class ClientFileRequester implements Runnable{
     private InetAddress ip;
     private ArmazemFicheiro af;
-    private File folder;
 
-    public ClientFileRequester(InetAddress ip,ArmazemFicheiro f,File ficheiro) {
+    public ClientFileRequester(InetAddress ip,ArmazemFicheiro f) {
         this.ip = ip;
         this.af = f;
-        this.folder = ficheiro;
     }
 
     public void run() {
