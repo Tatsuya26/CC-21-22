@@ -100,7 +100,7 @@ public class ServerWorker implements Runnable{
         socket.setSoTimeout(1000);
         while(fis.available() > 0) {
             byte[] fileData = fis.readNBytes(1293);
-            DataTransferPacket dtFile = new DataTransferPacket(numB, fileData.length, fileData);
+            DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
             sendDataPacket(dtFile, clientIP, port);
         }
         fis.close();

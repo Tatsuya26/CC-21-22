@@ -37,6 +37,7 @@ public class ClientFileGetter implements Runnable{
             if (!ficheiro.exists()) ficheiro.createNewFile();
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
             socket.setSoTimeout(1000);
+            int numB = 1;
             while (i < 25) {
                 try {
                     socket.send(outPacket);
@@ -48,9 +49,11 @@ public class ClientFileGetter implements Runnable{
                     int opcode = bis.read();
                     if (opcode == 3) {
                         DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                        ACKPacket ack = new ACKPacket(data.getNumBloco());
-                        fos.write(data.getData(),0,data.getLengthData());
-                        System.out.println("Enviar ACK ao bloco " + ack.getNumBloco());
+                        ACKPacket ack = new ACKPacket(numB);
+                        if (numB == data.getNumBloco()) {
+                            fos.write(data.getData(),0,data.getLengthData());
+                            System.out.println("Enviar ACK ao bloco " + numB++);
+                        }
                         outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
                     }
                     if (opcode == 5) {

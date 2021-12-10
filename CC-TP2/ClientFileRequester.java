@@ -5,8 +5,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ClientFileRequester implements Runnable{
     private InetAddress ip;
