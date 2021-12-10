@@ -34,12 +34,11 @@ public class ServerWorker implements Runnable{
         try {
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            DatagramPacket outPacket;
             socket.setSoTimeout(1000);
             int i = 0;
             while (i < 25){
                 try {
-                    outPacket = interpretadorPacket(clientIP,port);
+                    DatagramPacket outPacket = interpretadorPacket(clientIP,port);
                     socket.send(outPacket);
                     byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata,1300);

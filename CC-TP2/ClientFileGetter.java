@@ -37,13 +37,13 @@ public class ClientFileGetter implements Runnable{
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
             socket.setSoTimeout(1000);
             int numB = 1;
+            System.out.println("A pedir o ficheiro " + filename);
+            socket.send(outPacket);
             while (i < 25) {
                 try {
-                    socket.send(outPacket);
                     byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1300);
                     socket.receive(inPacket);
-                    System.out.println("A pedir o ficheiro " + filename);
                     int port = inPacket.getPort();
                     ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
                     int opcode = bis.read();
@@ -61,6 +61,7 @@ public class ClientFileGetter implements Runnable{
                         socket.send(new DatagramPacket(fin.serialize(), fin.serialize().length,ip,port));
                         i = 25;
                     }
+                    socket.send(outPacket);
                 }
                 catch (SocketTimeoutException e) {
                     i++;
