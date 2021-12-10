@@ -33,7 +33,7 @@ public class FTRapidClient implements Runnable{
 
             for (FileInfo fi : fis) System.out.println(fi.toString());
 
-            /*threads = new Thread[fis.size()];
+            threads = new Thread[fis.size()];
             t = 0;
             for (FileInfo fi : fis) {
                 threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
@@ -43,7 +43,7 @@ public class FTRapidClient implements Runnable{
             }
             
             for (Thread th : threads) th.join();
-            */
+            
         }
         catch (InterruptedException e) {
              e.printStackTrace();
