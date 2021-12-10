@@ -96,7 +96,6 @@ public class ServerWorker implements Runnable{
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
         Path file = Path.of(folder.getAbsolutePath()).getParent().getParent().resolve(f);
-        System.out.println("A enviar o ficheiro " + file);
         FileInputStream fis = new FileInputStream(file.toFile());
         int numB = 1;
         socket.setSoTimeout(1000);

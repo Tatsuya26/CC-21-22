@@ -36,7 +36,6 @@ public class ClientFileGetter implements Runnable{
             if (!ficheiro.exists()) ficheiro.createNewFile();
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
             socket.setSoTimeout(1000);
-            System.out.println("A pedir o ficheiro " + filename);
             int numB = 1;
             while (i < 25) {
                 try {
@@ -44,6 +43,7 @@ public class ClientFileGetter implements Runnable{
                     byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1300);
                     socket.receive(inPacket);
+                    System.out.println("A pedir o ficheiro " + filename);
                     int port = inPacket.getPort();
                     ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
                     int opcode = bis.read();
