@@ -23,7 +23,6 @@ public class FTRapidServer implements Runnable{
                 serverSocket.receive(receiver);
                 Thread executante = new Thread(new ServerWorker(receiver,folder,ips));
                 executante.start();
-                serverSocket.close();
             }
         }
         catch (IOException e) {
