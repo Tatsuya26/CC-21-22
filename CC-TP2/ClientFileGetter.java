@@ -35,10 +35,10 @@ public class ClientFileGetter implements Runnable{
             File ficheiro = file.toFile();
             if (!ficheiro.exists()) ficheiro.createNewFile();
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
-            socket.setSoTimeout(1000);
+            socket.setSoTimeout(5000);
             int numB = 1;
             System.out.println("A pedir o ficheiro " + filename);
-            while (i < 25) {
+            while (i < 5) {
                 try {
                     socket.send(outPacket);
                     byte[] indata = new byte[1300];

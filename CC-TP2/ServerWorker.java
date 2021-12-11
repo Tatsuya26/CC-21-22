@@ -34,13 +34,34 @@ public class ServerWorker implements Runnable{
         try {
             socket.setSoTimeout(1000);
             int i = 0;
+            int port = this.received.getPort();
+            InetAddress clientIP = this.received.getAddress();
+            System.out.println("Porta "+ port);
             while (i < 25){
                 try {
-                    interpretadorPacket();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
+                    int opcode = bis.read();
+                    if (opcode == 1) {
+                        sendFileInfo(clientIP,port);
+                        FINPacket fin = new FINPacket();
+                        DatagramPacket outPacket = (new DatagramPacket(fin.serialize(),fin.serialize().length,clientIP,port));
+                        socket.send(outPacket);
+                    }
+                    if (opcode == 2) {
+                        ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                        sendFile(readFile,clientIP,port);
+                        FINPacket fin = new FINPacket();
+                        DatagramPacket outPacket = (new DatagramPacket(fin.serialize(),fin.serialize().length,clientIP,port));
+                        socket.send(outPacket);
+                    }
+                    
+                    //TODO: Meter os FIN a terminar o programar. Criar uma flag para ver se já recebemos ou enviamos um FIN.
+                    if (opcode == 5) {
+                        i = 25;
+                    }
                     byte[] indata = new byte[1300];
-                    DatagramPacket inPacket = new DatagramPacket(indata,1300);
-                    socket.receive(inPacket);
-                    this.received = inPacket;
+                    this.received = new DatagramPacket(indata,1300);
+                    socket.receive(this.received);
                 }
                 catch (SocketTimeoutException e) {
                     i++;
@@ -95,10 +116,9 @@ public class ServerWorker implements Runnable{
         System.out.println("A enviar o ficheiro " + file.toString());
         FileInputStream fis = new FileInputStream(file.toFile());
         int numB = 1;
-        socket.setSoTimeout(1000);
+        System.out.println("Enviar bloco numero "+ numB);
         while(fis.available() > 0) {
             byte[] fileData = fis.readNBytes(1293);
-            System.out.println("Enviar bloco numero "+ numB);
             DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
             sendDataPacket(dtFile, clientIP, port);
         }
@@ -154,6 +174,5 @@ public class ServerWorker implements Runnable{
         if (opcode == 5) {
             throw new IOException();
         }
-        throw new IOException();
     }
 }
