@@ -113,7 +113,7 @@ public class ServerWorker implements Runnable{
 
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
-        Path file = Path.of(folder.getAbsolutePath()).getParent().getParent().resolve(f);
+        Path file = Path.of(folder.getAbsolutePath()).getParent().resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {

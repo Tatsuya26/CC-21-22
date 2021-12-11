@@ -22,7 +22,7 @@ public class ClientFileGetter implements Runnable{
     public void run() {
         try {
             DatagramSocket socket = new DatagramSocket();
-            System.out.println("Porta cliente " + socket.getPort());
+            System.out.println("Porta cliente " + socket.getLocalPort());
             String filename = fi.getName();
             ReadFilePacket readFile = new ReadFilePacket(filename);
             DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,80);
