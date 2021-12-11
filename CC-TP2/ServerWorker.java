@@ -38,7 +38,7 @@ public class ServerWorker implements Runnable{
             int i = 0;
             while (i < 25){
                 try {
-                    DatagramPacket outPacket = interpretadorPacket(clientIP,port);
+                    DatagramPacket outPacket = interpretadorPacket(clientIP);
                     socket.send(outPacket);
                     byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata,1300);
@@ -100,6 +100,7 @@ public class ServerWorker implements Runnable{
         socket.setSoTimeout(1000);
         while(fis.available() > 0) {
             byte[] fileData = fis.readNBytes(1293);
+            System.out.println("Enviar bloco numero "+ numB);
             DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
             sendDataPacket(dtFile, clientIP, port);
         }
@@ -108,24 +109,34 @@ public class ServerWorker implements Runnable{
 
     public void sendDataPacket (DataTransferPacket data,InetAddress ip, int port) throws IOException{
         boolean verificado = false;
-        while (!verificado) {
-            socket.send(new DatagramPacket(data.serialize(), data.serialize().length,ip,port));
-            byte[] indata = new byte[1300];
-            DatagramPacket inPacket = new DatagramPacket(indata,1300);
-            socket.receive(inPacket);
-            ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-            int opcode = bis.read();
-            if (opcode == 6) {
-                ACKPacket ack = ACKPacket.deserialize(bis);
-                if (ack.getNumBloco() == data.getNumBloco()) {
-                    verificado = true;
+        int i = 0;
+        socket.setSoTimeout(1000);
+        while (i < 5) {
+            try {
+                while (!verificado) {
+                    socket.send(new DatagramPacket(data.serialize(), data.serialize().length,ip,port));
+                    byte[] indata = new byte[1300];
+                    DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                    socket.receive(inPacket);
+                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                    int opcode = bis.read();
+                    if (opcode == 6) {
+                        ACKPacket ack = ACKPacket.deserialize(bis);
+                        if (ack.getNumBloco() == data.getNumBloco()) {
+                            verificado = true;
+                        }
+                    }
                 }
+            }
+            catch (SocketTimeoutException e) {
+                i++;
             }
         }
     }
 
-    public DatagramPacket interpretadorPacket (InetAddress clientIP,int port) throws IOException{
+    public DatagramPacket interpretadorPacket (InetAddress clientIP) throws IOException{
         ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
+        int port = this.received.getPort();
         int opcode = bis.read();
         if (opcode == 1) {
             sendFileInfo(clientIP,port);
