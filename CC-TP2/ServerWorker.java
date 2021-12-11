@@ -65,9 +65,6 @@ public class ServerWorker implements Runnable{
                 catch (SocketTimeoutException e) {
                     i++;
                 }
-                catch (IOException e) {
-                    i = 25;
-                }
             }
             socket.close();
         } catch (IOException e) {
@@ -147,6 +144,7 @@ public class ServerWorker implements Runnable{
                         ACKPacket ack = ACKPacket.deserialize(bis);
                         if (ack.getNumBloco() == data.getNumBloco()) {
                             verificado = true;
+                            System.out.println("Pacote " + ack.getNumBloco() + "verificado");
                         }
                     }
                 }

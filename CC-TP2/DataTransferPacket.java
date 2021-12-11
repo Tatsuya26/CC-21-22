@@ -17,7 +17,7 @@ public class DataTransferPacket {
         this.data = data;
     }
 
-    public short getNumBloco() {
+    public int getNumBloco() {
         return this.numeroBloco;
     }
 
