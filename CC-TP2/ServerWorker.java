@@ -32,14 +32,11 @@ public class ServerWorker implements Runnable{
 
     public void run() {
         try {
-            int port = this.received.getPort();
-            InetAddress clientIP = this.received.getAddress();
             socket.setSoTimeout(1000);
             int i = 0;
             while (i < 25){
                 try {
-                    DatagramPacket outPacket = interpretadorPacket(clientIP);
-                    socket.send(outPacket);
+                    interpretadorPacket();
                     byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata,1300);
                     socket.receive(inPacket);
@@ -95,6 +92,7 @@ public class ServerWorker implements Runnable{
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
         Path file = Path.of(folder.getAbsolutePath()).getParent().getParent().resolve(f);
+        System.out.println("A enviar o ficheiro " + file.toString());
         FileInputStream fis = new FileInputStream(file.toFile());
         int numB = 1;
         socket.setSoTimeout(1000);
@@ -104,6 +102,7 @@ public class ServerWorker implements Runnable{
             DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
             sendDataPacket(dtFile, clientIP, port);
         }
+        System.out.println("Ficheiro acabado de enviar");
         fis.close();
     }
 
@@ -134,20 +133,21 @@ public class ServerWorker implements Runnable{
         }
     }
 
-    public DatagramPacket interpretadorPacket (InetAddress clientIP) throws IOException{
+    public void interpretadorPacket () throws IOException{
         ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
         int port = this.received.getPort();
+        InetAddress clientIP = this.received.getAddress();
         int opcode = bis.read();
         if (opcode == 1) {
             sendFileInfo(clientIP,port);
             FINPacket fin = new FINPacket();
-            return new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
+            socket.send(new DatagramPacket(fin.serialize(),fin.serialize().length,clientIP,port));
         }
         if (opcode == 2) {
             ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
             sendFile(readFile,clientIP,port);
             FINPacket fin = new FINPacket();
-            return new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
+            socket.send(new DatagramPacket(fin.serialize(),fin.serialize().length,clientIP,port));
         }
         
         //TODO: Meter os FIN a terminar o programar. Criar uma flag para ver se já recebemos ou enviamos um FIN.
