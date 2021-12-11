@@ -146,6 +146,7 @@ public class ServerWorker implements Runnable{
                         ACKPacket ack = ACKPacket.deserialize(bis);
                         if (ack.getNumBloco() == data.getNumBloco()) {
                             verificado = true;
+                            i = 5;
                         }
                     }
                 }
