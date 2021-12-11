@@ -36,8 +36,6 @@ public class ServerWorker implements Runnable{
             int i = 0;
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            System.out.println("Porta "+ port);
-            System.out.print("IP" + clientIP);
             while (i < 25){
                 try {
                     ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
@@ -122,9 +120,9 @@ public class ServerWorker implements Runnable{
         }
         FileInputStream fis = new FileInputStream(ficheiro);
         int numB = 1;
-        System.out.println("Enviar bloco numero "+ numB);
         while(fis.available() > 0) {
             byte[] fileData = fis.readNBytes(1293);
+            System.out.println("Enviar bloco numero "+ numB);
             DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
             sendDataPacket(dtFile, clientIP, port);
         }

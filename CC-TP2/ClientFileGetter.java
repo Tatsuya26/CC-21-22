@@ -22,7 +22,6 @@ public class ClientFileGetter implements Runnable{
     public void run() {
         try {
             DatagramSocket socket = new DatagramSocket();
-            System.out.println("Porta cliente " + socket.getLocalPort());
             String filename = fi.getName();
             ReadFilePacket readFile = new ReadFilePacket(filename);
             DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,80);
@@ -45,7 +44,6 @@ public class ClientFileGetter implements Runnable{
                     byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1300);
                     socket.receive(inPacket);
-                    System.out.println("Recebido pacote do servidor");
                     int port = inPacket.getPort();
                     ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
                     int opcode = bis.read();
@@ -54,7 +52,8 @@ public class ClientFileGetter implements Runnable{
                         ACKPacket ack = new ACKPacket(numB);
                         if (numB == data.getNumBloco()) {
                             fos.write(data.getData(),0,data.getLengthData());
-                            System.out.println("Enviar ACK ao bloco " + numB++);
+                            System.out.println("Enviar ACK ao bloco " + numB);
+                            numB++;
                         }
                         outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
                     }
