@@ -118,6 +118,7 @@ public class ServerWorker implements Runnable{
         FileInputStream fis = new FileInputStream(ficheiro);
         int numB = 1;
         while(fis.available() > 0) {
+            System.out.println("Bytes restantes " + fis.available());
             byte[] fileData = fis.readNBytes(1293);
             System.out.println("Enviar bloco numero "+ numB);
             DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
@@ -144,7 +145,7 @@ public class ServerWorker implements Runnable{
                         ACKPacket ack = ACKPacket.deserialize(bis);
                         if (ack.getNumBloco() == data.getNumBloco()) {
                             verificado = true;
-                            System.out.println("Pacote " + ack.getNumBloco() + "verificado");
+                            System.out.println("Pacote " + ack.getNumBloco() + " verificado");
                         }
                     }
                 }
