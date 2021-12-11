@@ -37,6 +37,7 @@ public class ServerWorker implements Runnable{
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
             System.out.println("Porta "+ port);
+            System.out.print("IP" + clientIP);
             while (i < 25){
                 try {
                     ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
@@ -114,7 +115,12 @@ public class ServerWorker implements Runnable{
         String f = readFile.getFileName();
         Path file = Path.of(folder.getAbsolutePath()).getParent().getParent().resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
-        FileInputStream fis = new FileInputStream(file.toFile());
+        File ficheiro = new File(file.toString());
+        if (!ficheiro.exists()) {
+            System.out.println("Ficheiro nao existe");
+            return;
+        }
+        FileInputStream fis = new FileInputStream(ficheiro);
         int numB = 1;
         System.out.println("Enviar bloco numero "+ numB);
         while(fis.available() > 0) {
