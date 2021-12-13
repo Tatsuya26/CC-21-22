@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 
 public class FFSync {
     public static void main(String[] args) {
@@ -18,10 +19,15 @@ public class FFSync {
             Thread serverUDP = new Thread(new FTRapidServer(diretoria,ips));
             cliente.start();
             serverUDP.start();
-            cliente.join();
-            serverUDP.join();
+            ServerSocket socket = new ServerSocket(1904);
+            while (true) {
+                Thread http = new Thread(new HTTPResponser(socket.accept()));
+                http.start();
+            }
+            //cliente.join();
+            //serverUDP.join();
         }
-        catch (IOException | InterruptedException  e) {
+        catch (IOException e) {
              e.printStackTrace();   
              
         }
