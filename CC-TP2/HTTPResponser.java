@@ -32,7 +32,7 @@ public class HTTPResponser implements Runnable{
             bwStream.write("HTTP/1.1 200 OK\r\n");
             bwStream.write("Date: Fri, 13 Dec 23:59:59 GMT\r\n");
             bwStream.write("Content-Type: text/html\r\n");
-            bwStream.write("Content-Length: 59\r\n");
+            bwStream.write("Content-Length: 80\r\n");
             bwStream.write("Expires: Sat, 01 Jan 2000 00:59:59 GMT\r\n");
             bwStream.write("Last-modified: Fri, 09 Aug 1996 14:21:40 GMT\r\n");
             bwStream.write("\r\n");
