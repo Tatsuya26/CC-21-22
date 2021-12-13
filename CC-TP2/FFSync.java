@@ -19,7 +19,7 @@ public class FFSync {
             Thread serverUDP = new Thread(new FTRapidServer(diretoria,ips));
             cliente.start();
             serverUDP.start();
-            ServerSocket socket = new ServerSocket(80);
+            ServerSocket socket = new ServerSocket(8080);
             while (true) {
                 Thread http = new Thread(new HTTPResponser(socket.accept()));
                 http.start();
