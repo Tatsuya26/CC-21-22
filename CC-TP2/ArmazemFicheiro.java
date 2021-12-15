@@ -35,10 +35,12 @@ public class ArmazemFicheiro {
     private void adicionarFicheirosSistema(File folder,List<File> listFiles) {
         File[] subFicheiros = folder.listFiles();
         for (File f  : subFicheiros) {
-            if (f.isDirectory())
-                adicionarFicheirosSistema(f,listFiles);
-            else {
-                listFiles.add(f);
+            if (!f.isHidden()) {
+                if (f.isDirectory())
+                    adicionarFicheirosSistema(f,listFiles);
+                else {
+                    listFiles.add(f);
+                }
             }
         }
     }
