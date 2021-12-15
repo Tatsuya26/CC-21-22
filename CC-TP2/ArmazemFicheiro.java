@@ -22,19 +22,27 @@ public class ArmazemFicheiro {
     public ArmazemFicheiro(File diretoria) {
         this.lock = new ReentrantLock();
         this.ficheiros = new HashMap<>();
-        File[] subFicheiros = diretoria.listFiles();
+        adicionarFicheirosSistema(diretoria.getParentFile());
+    }
+
+    private void adicionarFicheirosSistema(File folder) {
+        File[] subFicheiros = folder.listFiles();
         try {
             for (File f  : subFicheiros) {
-                BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-                String filename = f.getAbsolutePath();
-                Path file = Path.of(filename);
-                Path parent = file.getParent().getParent();
-                file = parent.relativize(file);
-                FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
-                adicionaFileInfo(fi);
+                if (f.isDirectory())
+                    adicionarFicheirosSistema(f);
+                else {
+                    BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+                    String filename = f.getAbsolutePath();
+                    Path file = Path.of(filename);
+                    Path parent = file.getParent().getParent();
+                    file = parent.relativize(file);
+                    FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
+                    adicionaFileInfo(fi);
+                }
             }
         }
-        catch (IOException e) {
+        catch(IOException e) {
             e.printStackTrace();
         }
     }

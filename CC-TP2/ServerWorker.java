@@ -131,7 +131,7 @@ public class ServerWorker implements Runnable{
         for (File f  : ficheirosPasta) {
             if (f.isDirectory())
                 verFicheirosPasta(f, res);
-            res.add(f);
+            else res.add(f);
         }
     }
 
