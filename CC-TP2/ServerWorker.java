@@ -11,6 +11,8 @@ import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerWorker implements Runnable{
     public DatagramPacket received;
@@ -44,7 +46,8 @@ public class ServerWorker implements Runnable{
                     int opcode = bis.read();
                     // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
                     if (opcode == 1) {
-                        sendFileInfo(clientIP,port);
+                        RQFileInfoPacket rq = RQFileInfoPacket.deserialise(bis);
+                        sendFileInfo(clientIP,port,rq.getFileToSync());
                         FINPacket fin = new FINPacket();
                         DatagramPacket outPacket = (new DatagramPacket(fin.serialize(),fin.serialize().length,clientIP,port));
                         socket.send(outPacket);
@@ -78,19 +81,20 @@ public class ServerWorker implements Runnable{
     }
 
     // Envia ao cliente a informação dos ficheiros na sua diretoria a sincronizar.
-    public void sendFileInfo(InetAddress ip,int port) throws IOException{
+    public void sendFileInfo(InetAddress ip,int port,String ftoSync) throws IOException{
         //Criar array com todos os ficheiros da diretoria;
-        File[] subFicheiros = folder.listFiles();
+        File[] subFicheiros = folder.getParentFile().listFiles();
         //Abrir stream onde escrevemos os bytes;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         int numB = 1;
         //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
-        for (File f  : subFicheiros) {
+        List<File> fiSend = escolherFicheirosEnviar(subFicheiros,ftoSync);
+        for (File f  : fiSend) {
             BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
             String filename = f.getAbsolutePath();
             //Criar o path relativo para o ficheiro.
             Path file = Path.of(filename);
-            Path parent = file.getParent().getParent();
+            Path parent = folder.toPath().getParent();
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
@@ -110,6 +114,25 @@ public class ServerWorker implements Runnable{
         byte[] data = bos.toByteArray();
         DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length, data);
         sendDataPacket(fileInfos, ip, port);
+    }
+
+    private List<File> escolherFicheirosEnviar(File[] subFicheiros,String ficheiroSync) {
+        List<File> res = new ArrayList<>();
+        for (File f  : subFicheiros) {
+            if (f.getName().compareTo(ficheiroSync) == 0 || f.getName().compareTo(folder.getName()) == 0) {
+                verFicheirosPasta(f,res);
+            }
+        }
+        return res;
+    }
+
+    private void verFicheirosPasta(File pasta,List<File> res) {
+        File[] ficheirosPasta = pasta.listFiles();
+        for (File f  : ficheirosPasta) {
+            if (f.isDirectory())
+                verFicheirosPasta(f, res);
+            res.add(f);
+        }
     }
 
     // Envia ficheiro ao cliente, verificando sempre que este recebe cada bloco de dados.

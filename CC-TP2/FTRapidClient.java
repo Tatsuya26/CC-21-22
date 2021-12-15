@@ -22,7 +22,7 @@ public class FTRapidClient implements Runnable{
             Thread[] threads = new Thread[ips.length];
             int t = 0;
             for (InetAddress i : this.ips) {
-                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar));
+                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar,folder.getName()));
                 threads[t].start();
                 t++;
             }
@@ -32,7 +32,7 @@ public class FTRapidClient implements Runnable{
             List<FileInfo> fis = this.ficheirosSincronizar.getList();
 
             for (FileInfo fi : fis) System.out.println(fi.toString());
-
+            /*
             threads = new Thread[fis.size()];
             t = 0;
             for (FileInfo fi : fis) {
@@ -43,6 +43,7 @@ public class FTRapidClient implements Runnable{
             }
             
             for (Thread th : threads) th.join();
+            */
             
         }
         catch (InterruptedException e) {
