@@ -8,9 +8,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,13 +88,12 @@ public class ServerWorker implements Runnable{
         //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
         List<File> fiSend = escolherFicheirosEnviar(subFicheiros,ftoSync);
         for (File f  : fiSend) {
-            BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
             String filename = f.getAbsolutePath();
             //Criar o path relativo para o ficheiro.
             Path file = Path.of(filename);
             Path parent = folder.toPath().getParent();
             file = parent.relativize(file);
-            FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
+            FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
             if ((bos.size() + fi.serialize().length + 1) > 1292) {
                 bos.write(0);

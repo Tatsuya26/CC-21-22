@@ -1,8 +1,6 @@
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,28 +20,26 @@ public class ArmazemFicheiro {
     public ArmazemFicheiro(File diretoria) {
         this.lock = new ReentrantLock();
         this.ficheiros = new HashMap<>();
-        adicionarFicheirosSistema(diretoria.getParentFile());
+        List<File> ficheirosSistema = new ArrayList<>();
+        adicionarFicheirosSistema(diretoria.getParentFile(),ficheirosSistema);
+        for (File f : ficheirosSistema) {
+            String filename = f.getAbsolutePath();
+            Path file = Path.of(filename);
+            Path parent = diretoria.toPath().getParent();
+            file = parent.relativize(file);
+            FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
+            adicionaFileInfo(fi);
+        }
     }
 
-    private void adicionarFicheirosSistema(File folder) {
+    private void adicionarFicheirosSistema(File folder,List<File> listFiles) {
         File[] subFicheiros = folder.listFiles();
-        try {
-            for (File f  : subFicheiros) {
-                if (f.isDirectory())
-                    adicionarFicheirosSistema(f);
-                else {
-                    BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-                    String filename = f.getAbsolutePath();
-                    Path file = Path.of(filename);
-                    Path parent = file.getParent().getParent();
-                    file = parent.relativize(file);
-                    FileInfo fi = new FileInfo(file.toString(),Long.toString(fa.lastModifiedTime().toMillis()));
-                    adicionaFileInfo(fi);
-                }
+        for (File f  : subFicheiros) {
+            if (f.isDirectory())
+                adicionarFicheirosSistema(f,listFiles);
+            else {
+                listFiles.add(f);
             }
-        }
-        catch(IOException e) {
-            e.printStackTrace();
         }
     }
 
