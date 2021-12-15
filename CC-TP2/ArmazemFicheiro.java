@@ -63,4 +63,8 @@ public class ArmazemFicheiro {
         return this.ficheiros.values().stream().collect(Collectors.toList());
     }
 
+    public FileInfo getFileInfo(String nome) {
+        return this.ficheiros.get(nome);
+    }
+
 }

@@ -75,6 +75,7 @@ public class ClientFileGetter implements Runnable{
                 }
             }
             fos.close();
+            ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
         }
         catch (IOException e) {
