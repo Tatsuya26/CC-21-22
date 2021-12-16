@@ -1,10 +1,12 @@
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,54 +23,116 @@ public class FTRapidClient implements Runnable{
     public void run() {
         try{
             byte[] indata = new byte[1300];
-            byte[] outdata = new byte[1300];
+            byte[] outdata;
             DatagramSocket socket = new DatagramSocket();
-            outdata = new String("Pedido de ficheiros").getBytes();
+            RQFileInfoPacket request = new RQFileInfoPacket();
+            outdata = request.serialize();
             DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
             DatagramPacket inPacket = new DatagramPacket(indata, 1300);
             
             //timeout até haver conexão
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(1000);
             int i = 0;
-            while (i < 5){
+            // Esperamos 25 segundos até obter resposta. Devemos encontrar um tempo ótimo.
+            while (i < 25){
                 try {
                     socket.send(outPacket);
                     socket.receive(inPacket);
-                    i = 5;
+                    int port = inPacket.getPort();
+                    InetAddress ip = inPacket.getAddress();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                    if (bis.read() == 3) {
+                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                        List<FileInfo> fis = readFileInfos(data);
+                        System.out.println("Vamos transferir " + fis.size() + " ficheiros");
+                        getFiles(fis,ip,port,socket);
+                        FINPacket fin = new FINPacket();
+                        outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
+                        socket.send(outPacket);
+                    }
+                    if (bis.read() == 5) {
+                        System.out.println("Recebido pedido de fim de conexão");
+                        FINPacket fin = new FINPacket();
+                        outPacket = new DatagramPacket(fin.serialize(), 1,ip,port);
+                        socket.send(outPacket);
+                        i = 25;
+                    }
                 }
                 catch (SocketTimeoutException e) {
                     i++;
                 }
             }
-            //print na consola o que foi recebido(a bunch of 0??)
-            //for (Byte b : inPacket.getData()) System.out.print(b);
-
-            //deserialize info from other per
-            ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-            //List<FileInfo> fis = new ArrayList<>();
-            //while (bis.read() == '+') {
-                FileInfo fi = FileInfo.deserialize(bis);
-                System.out.println(fi.toString());
-              //  fis.add(fi);
-            //}
-
-            //:FIXME : O PACOTE QUE VEM DA SOCKET VEM COM LIXO O QUE NAO PERMITE FAZER BEM O PARSING
-            //          Testa assim e se nao der, tenta ver onde os bytes mudam.
-            //          O + sinaliza que ainda há ficheiros para serem transferidos
-
-            //for (FileInfo f : fis)   System.out.println(f.toString());
-            
-            //print na consola para verificar se o que foi enviado está correto
-            int port = outPacket.getPort();
-            InetAddress ip = outPacket.getAddress();
-            String resultado = "Obrigado";
-            System.out.println("Agradecer ao IP " + ip.toString() + " na porta " + port);
-            DatagramPacket outPacket2 = new DatagramPacket(resultado.getBytes(), resultado.length(),ip,port);
-            socket.send(outPacket2);
             socket.close();
         }
         catch (IOException e) {
              e.printStackTrace();
+        }
+    }
+
+    public List<FileInfo> readFileInfos (DataTransferPacket data) throws IOException{
+        //Abrimos stream para leitura do array de bytes vindo do packet;
+        ByteArrayInputStream bis = new ByteArrayInputStream(data.getData());
+        // Lista onde armazenamos a informação dos ficheiros;
+        List<FileInfo> fis = new ArrayList<>();
+        //Lemos até ao byte 0;
+        while (bis.read() != 0) {
+            FileInfo fi = FileInfo.deserialize(bis);
+            fis.add(fi);
+        }
+        return fis;
+    }
+
+    public void getFiles(List<FileInfo> fis, InetAddress ip,int port,DatagramSocket socket) {
+        try {
+            for (FileInfo f: fis) {
+                String filename = f.getName();
+                System.out.println("A pedir o ficheiro " + filename);
+                ReadFilePacket readFile = new ReadFilePacket(filename);
+                DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,port);
+                int i = 0;
+                Path file = Path.of(filename);
+                Path parent = file.getParent().getParent();
+                file = parent.relativize(file);
+                Path path = folder.toPath().getParent();
+                file = path.resolve(file);
+                parent = file.getParent();
+                System.out.println(file.toString());
+                File parentFile = parent.toFile();
+                if (!parentFile.exists()) parentFile.mkdir();
+                File ficheiro = file.toFile();
+                if (!ficheiro.exists()) ficheiro.createNewFile();
+                FileOutputStream fos = new FileOutputStream(ficheiro,false);
+                socket.setSoTimeout(1000);
+                while (i < 25) {
+                    try {
+                        socket.send(outPacket);
+                        byte[] indata = new byte[1300];
+                        DatagramPacket inPacket = new DatagramPacket(indata, 1300);
+                        socket.receive(inPacket);
+                        ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                        int opcode = bis.read();
+                        if (opcode == 3) {
+                            DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                            ACKPacket ack = new ACKPacket(data.getNumBloco());
+                            fos.write(data.getData(),0,data.getLengthData());
+                            System.out.println("Enviar ACK ao bloco " + ack.getNumBloco());
+                            outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
+                        }
+                        if (opcode == 5) {
+                            System.out.println("Recebido FIN");
+                            i = 25;
+                        }
+                    }
+                    catch (SocketTimeoutException e) {
+                        i++;
+                    }
+
+                }
+                fos.close();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

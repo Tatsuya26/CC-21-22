@@ -1,5 +1,7 @@
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -31,38 +33,103 @@ public class ServerWorker implements Runnable{
         try {
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            File[] subFicheiros = folder.listFiles();
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            for (File f  : subFicheiros) {
-                BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-                FileInfo fi = new FileInfo(f.getName(),Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
-                bos.write(fi.serialize());
-                bos.write('+');
+
+            byte opcode1 = this.received.getData()[0];
+            byte[] data = new byte[1300];
+            if (opcode1 == 1) {
+                DataTransferPacket dataPacket = getFileInfo();
+                data = dataPacket.serialize();
+                System.out.println("Recebido pedido de ficheiros");
             }
-            bos.write(Byte.parseByte("+123"));
-            byte[] data = bos.toByteArray();
+            
             DatagramPacket sendPacket = new DatagramPacket(data,data.length,clientIP,port);
-            System.out.println("Server a enviar pacote para o IP " + clientIP.toString() + " para a porta " + port);
-            /*for (byte b : data) {
-                System.out.print(b);
-            }*/
-            socket.setSoTimeout(5000);
+            
+            byte[] indata = new byte[1300];
+            this.received = new DatagramPacket(indata, 1300);
+            socket.setSoTimeout(1000);
             int i = 0;
-            while (i < 5) {
+            while (i < 25){
                 try {
                     socket.send(sendPacket);
                     socket.receive(this.received);
-                    i = 5;
+                    ByteArrayInputStream bis = new ByteArrayInputStream(this.received.getData());
+                    int opcode = bis.read();
+                    if (opcode == 2) {
+
+                        ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                        sendFile(readFile,clientIP,port);
+                        System.out.println("Ficheiro " +readFile.getFileName() + " enviado com sucesso.");
+                        FINPacket fin = new FINPacket();
+                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
+                    }
+                    
+                    //TODO : Meter os FIN a terminar o programar. Criar uma flag para ver se já recebemos ou enviamos um FIN.
+                    if (opcode == 5) {
+                        
+                        System.out.println("Recebido pedido de fim de conexão");
+                        FINPacket fin = new FINPacket();
+                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
+                        socket.send(sendPacket);
+                        i = 25;
+                    }
                 }
                 catch (SocketTimeoutException e) {
                     i++;
                 }
             }
-            System.out.println("Server here!");
-            System.out.println(new String(this.received.getData()));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+
+    public DataTransferPacket getFileInfo() throws IOException{
+        //Criar array com todos os ficheiros da diretoria;
+        File[] subFicheiros = folder.listFiles();
+        //Abrir stream onde escrevemos os bytes;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
+        for (File f  : subFicheiros) {
+            BasicFileAttributes fa = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+            String filename = f.getAbsolutePath();
+            FileInfo fi = new FileInfo(filename,Long.toString(fa.lastModifiedTime().toMillis()),Long.toString(fa.size()));
+            bos.write('+');
+            bos.write(fi.serialize());
+        }
+        // O byte 0 indica que não temos mais dados;
+        bos.write(0);
+        byte[] data = bos.toByteArray();
+        return new DataTransferPacket(1,data.length, data);
+    }
+
+    public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
+        File f = new File(readFile.getFileName());
+        System.out.println("Recebido pedido de leitura para o ficheiro " + readFile.getFileName());
+        FileInputStream fis = new FileInputStream(f);
+        int numB = 1;
+        socket.setSoTimeout(1000);
+        while(fis.available() > 0) {
+            byte[] fileData = fis.readNBytes(1293);
+            DataTransferPacket dtFile = new DataTransferPacket(numB, fileData.length, fileData);
+            DatagramPacket sendPacket = new DatagramPacket(dtFile.serialize(),dtFile.serialize().length,clientIP,port);
+            boolean verificado = false;
+            while (!verificado) {
+                socket.send(sendPacket);
+                byte[] indata = new byte[1300];
+                DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                socket.receive(inPacket);
+                ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+                int opcode = bis.read();
+                if (opcode == 6) {
+                    ACKPacket ack = ACKPacket.deserialize(bis);
+                    if (ack.getNumBloco() == numB) {
+                        verificado = true;
+                        numB++;
+                    }
+                }
+            }
+        }
+        fis.close();
     }
 }
