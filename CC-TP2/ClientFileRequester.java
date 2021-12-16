@@ -10,16 +10,18 @@ import java.util.Arrays;
 public class ClientFileRequester implements Runnable{
     private InetAddress ip;
     private ArmazemFicheiro af;
+    private String fileToSync;
 
-    public ClientFileRequester(InetAddress ip,ArmazemFicheiro f) {
+    public ClientFileRequester(InetAddress ip,ArmazemFicheiro f,String folder) {
         this.ip = ip;
         this.af = f;
+        this.fileToSync = folder;
     }
 
     public void run() {
         try {
             DatagramSocket socket = new DatagramSocket();
-            RQFileInfoPacket rqPacket = new RQFileInfoPacket();
+            RQFileInfoPacket rqPacket = new RQFileInfoPacket(this.fileToSync);
             DatagramPacket outPacket = new DatagramPacket(rqPacket.serialize(),rqPacket.serialize().length,ip,80);
             int i = 0;
             socket.setSoTimeout(1000);

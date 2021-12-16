@@ -36,7 +36,7 @@ public class ClientFileGetter implements Runnable{
             Path parent = file.getParent();
             //Verificar se existe a diretoria pai. Se não existir criamos a pasta.
             File parentFile = parent.toFile();
-            if (!parentFile.exists()) parentFile.mkdir();
+            if (!parentFile.exists()) parentFile.mkdirs();
             //Verificar se o ficheiro já existe. Se não existir criamos o ficheiro.
             File ficheiro = file.toFile();
             if (!ficheiro.exists()) ficheiro.createNewFile();
@@ -85,6 +85,7 @@ public class ClientFileGetter implements Runnable{
                 }
             }
             fos.close();
+            ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
         }
         catch (IOException e) {

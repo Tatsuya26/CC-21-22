@@ -22,7 +22,7 @@ public class FTRapidClient implements Runnable{
             Thread[] threads = new Thread[ips.length];
             int t = 0;
             for (InetAddress i : this.ips) {
-                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar));
+                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar,folder.getName()));
                 threads[t].start();
                 t++;
             }
