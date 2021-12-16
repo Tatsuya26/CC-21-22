@@ -31,7 +31,7 @@ public class ClientFileGetter implements Runnable{
             int i = 0;
             // Resolver o nome do ficheiro para ficar na diretoria onde estamos a sincronizar. Neste caso a diretoria pai da dada nos parametros
             Path file = Path.of(filename);
-            Path path = Path.of(folder.getAbsolutePath()).getParent();
+            Path path = Path.of(folder.getAbsolutePath());
             file = path.resolve(file);
             Path parent = file.getParent();
             //Verificar se existe a diretoria pai. Se não existir criamos a pasta.

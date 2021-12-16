@@ -8,9 +8,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,8 +55,7 @@ public class ServerWorker implements Runnable{
 
                     // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
                     if (opcode == 1) {
-                        RQFileInfoPacket rq = RQFileInfoPacket.deserialise(bis);
-                        sendFileInfo(clientIP,port,rq.getFileToSync());
+                        sendFileInfo(clientIP,port);
                         FINPacket fin = new FINPacket();
                         byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
                         DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
@@ -94,19 +91,17 @@ public class ServerWorker implements Runnable{
     }
 
     // Envia ao cliente a informação dos ficheiros na sua diretoria a sincronizar.
-    public void sendFileInfo(InetAddress ip,int port,String ftoSync) throws IOException{
-        //Criar array com todos os ficheiros da diretoria;
-        File[] subFicheiros = folder.getParentFile().listFiles();
+    public void sendFileInfo(InetAddress ip,int port) throws IOException{
         //Abrir stream onde escrevemos os bytes;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         int numB = 1;
         //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
-        List<File> fSend = escolherFicheirosEnviar(subFicheiros, ftoSync);
+        List<File> fSend = escolherFicheirosEnviar(folder);
         for (File f  : fSend) {
             String filename = f.getAbsolutePath();
             //Criar o path relativo para o ficheiro.
             Path file = Path.of(filename);
-            Path parent = folder.toPath().getParent();
+            Path parent = folder.toPath();
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
@@ -128,11 +123,16 @@ public class ServerWorker implements Runnable{
         sendDataPacket(fileInfos, ip, port);
     }
 
-    private List<File> escolherFicheirosEnviar(File[] subFicheiros,String ficheiroSync) {
+    private List<File> escolherFicheirosEnviar(File pasta) {
         List<File> res = new ArrayList<>();
+        File[] subFicheiros = pasta.listFiles();
         for (File f  : subFicheiros) {
-            if (f.getName().compareTo(ficheiroSync) == 0 || f.getName().compareTo(folder.getName()) == 0) {
-                verFicheirosPasta(f,res);
+            if (!f.isHidden()) {
+                if (f.isDirectory())
+                    verFicheirosPasta(f, res);
+                else {
+                    res.add(f);
+                }
             }
         }
         return res;
@@ -141,16 +141,20 @@ public class ServerWorker implements Runnable{
     private void verFicheirosPasta(File pasta,List<File> res) {
         File[] ficheirosPasta = pasta.listFiles();
         for (File f  : ficheirosPasta) {
-            if (f.isDirectory())
-                verFicheirosPasta(f, res);
-            else res.add(f);
+            if (!f.isHidden()) {
+                if (f.isDirectory())
+                    verFicheirosPasta(f, res);
+                else {
+                    res.add(f);
+                }
+            }
         }
     }
 
     // Envia ficheiro ao cliente, verificando sempre que este recebe cada bloco de dados.
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
-        Path file = Path.of(folder.getAbsolutePath()).getParent().resolve(f);
+        Path file = Path.of(folder.getAbsolutePath()).resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());

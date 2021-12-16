@@ -21,11 +21,11 @@ public class ArmazemFicheiro {
         this.lock = new ReentrantLock();
         this.ficheiros = new HashMap<>();
         List<File> ficheirosSistema = new ArrayList<>();
-        adicionarFicheirosSistema(diretoria.getParentFile(),ficheirosSistema);
+        adicionarFicheirosSistema(diretoria,ficheirosSistema);
         for (File f : ficheirosSistema) {
             String filename = f.getAbsolutePath();
             Path file = Path.of(filename);
-            Path parent = diretoria.toPath().getParent();
+            Path parent = diretoria.toPath();
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             adicionaFileInfo(fi);
@@ -63,8 +63,5 @@ public class ArmazemFicheiro {
         return this.ficheiros.values().stream().collect(Collectors.toList());
     }
 
-    public FileInfo getFileInfo(String nome) {
-        return this.ficheiros.get(nome);
-    }
 
 }
