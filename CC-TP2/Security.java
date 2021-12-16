@@ -43,7 +43,7 @@ public class Security {
         int size = packet.length;
 
         byte[] macR = Arrays.copyOfRange(packet,0,20);
-        byte[] message = Arrays.copyOfRange(packet,21,size);
+        byte[] message = Arrays.copyOfRange(packet,20,size);
 
         byte[] mac = getMac(message);
 
