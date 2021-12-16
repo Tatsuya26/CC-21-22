@@ -7,11 +7,13 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 public class ClientFileGetter implements Runnable{
     public InetAddress ip;
     public FileInfo fi;
     public File folder;
+    public Security s;
 
     public ClientFileGetter(InetAddress ip,FileInfo fi,File f) {
         this.ip = ip;
@@ -34,7 +36,7 @@ public class ClientFileGetter implements Runnable{
             Path parent = file.getParent();
             //Verificar se existe a diretoria pai. Se não existir criamos a pasta.
             File parentFile = parent.toFile();
-            if (!parentFile.exists()) parentFile.mkdirs();
+            if (!parentFile.exists()) parentFile.mkdir();
             //Verificar se o ficheiro já existe. Se não existir criamos o ficheiro.
             File ficheiro = file.toFile();
             if (!ficheiro.exists()) ficheiro.createNewFile();
@@ -50,7 +52,13 @@ public class ClientFileGetter implements Runnable{
                     DatagramPacket inPacket = new DatagramPacket(indata, 1300);
                     socket.receive(inPacket);
                     int port = inPacket.getPort();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
+
+                    Security s = new Security();
+                    boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
+
+                    byte[] packet = inPacket.getData();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+
                     //Ler o byte que indica o opcode
                     int opcode = bis.read();
                     // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
@@ -61,12 +69,14 @@ public class ClientFileGetter implements Runnable{
                             fos.write(data.getData(),0,data.getLengthData());
                             numB++;
                         }
-                        outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
+                        byte[] packetToSend = s.addSecurityToPacket(ack.serialize());
+                        outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
                     }
                     // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                     if (opcode == 5) {
                         FINPacket fin = new FINPacket();
-                        socket.send(new DatagramPacket(fin.serialize(), fin.serialize().length,ip,port));
+                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+                        socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
                         i = 25;
                     }
                 }
@@ -75,7 +85,6 @@ public class ClientFileGetter implements Runnable{
                 }
             }
             fos.close();
-            ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
         }
         catch (IOException e) {
