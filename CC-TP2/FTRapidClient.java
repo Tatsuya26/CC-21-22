@@ -1,12 +1,7 @@
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,57 +9,43 @@ public class FTRapidClient implements Runnable{
     public final static int length = 1300;
     public File folder;
     public InetAddress[] ips;
+    public ArmazemFicheiro ficheirosSincronizar;
 
     public FTRapidClient(File folder,InetAddress[] ips) {
         this.folder = folder;
         this.ips = ips;
+        this.ficheirosSincronizar = new ArmazemFicheiro(this.folder);
     }
 
     public void run() {
         try{
-            byte[] indata = new byte[1300];
-            byte[] outdata;
-            DatagramSocket socket = new DatagramSocket();
-            RQFileInfoPacket request = new RQFileInfoPacket();
-            outdata = request.serialize();
-            DatagramPacket outPacket = new DatagramPacket(outdata, outdata.length,ips[0],80);
-            DatagramPacket inPacket = new DatagramPacket(indata, 1300);
-            
-            //timeout até haver conexão
-            socket.setSoTimeout(1000);
-            int i = 0;
-            // Esperamos 25 segundos até obter resposta. Devemos encontrar um tempo ótimo.
-            while (i < 25){
-                try {
-                    socket.send(outPacket);
-                    socket.receive(inPacket);
-                    int port = inPacket.getPort();
-                    InetAddress ip = inPacket.getAddress();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-                    if (bis.read() == 3) {
-                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                        List<FileInfo> fis = readFileInfos(data);
-                        System.out.println("Vamos transferir " + fis.size() + " ficheiros");
-                        getFiles(fis,ip,port,socket);
-                        FINPacket fin = new FINPacket();
-                        outPacket = new DatagramPacket(fin.serialize(),fin.serialize().length,ip,port);
-                        socket.send(outPacket);
-                    }
-                    if (bis.read() == 5) {
-                        System.out.println("Recebido pedido de fim de conexão");
-                        FINPacket fin = new FINPacket();
-                        outPacket = new DatagramPacket(fin.serialize(), 1,ip,port);
-                        socket.send(outPacket);
-                        i = 25;
-                    }
-                }
-                catch (SocketTimeoutException e) {
-                    i++;
-                }
+            Thread[] threads = new Thread[ips.length];
+            int t = 0;
+            for (InetAddress i : this.ips) {
+                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar));
+                threads[t].start();
+                t++;
             }
-            socket.close();
+
+            for (Thread th : threads) th.join();
+
+            List<FileInfo> fis = this.ficheirosSincronizar.getList();
+
+            for (FileInfo fi : fis) System.out.println(fi.toString());
+
+            threads = new Thread[fis.size()];
+            t = 0;
+            for (FileInfo fi : fis) {
+                threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
+                if (fi.getIP() != null) 
+                    threads[t].start();
+                t++;
+            }
+            
+            for (Thread th : threads) th.join();
+            
         }
-        catch (IOException e) {
+        catch (InterruptedException e) {
              e.printStackTrace();
         }
     }
@@ -82,57 +63,4 @@ public class FTRapidClient implements Runnable{
         return fis;
     }
 
-    public void getFiles(List<FileInfo> fis, InetAddress ip,int port,DatagramSocket socket) {
-        try {
-            for (FileInfo f: fis) {
-                String filename = f.getName();
-                System.out.println("A pedir o ficheiro " + filename);
-                ReadFilePacket readFile = new ReadFilePacket(filename);
-                DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,port);
-                int i = 0;
-                Path file = Path.of(filename);
-                Path parent = file.getParent().getParent();
-                file = parent.relativize(file);
-                Path path = folder.toPath().getParent();
-                file = path.resolve(file);
-                parent = file.getParent();
-                System.out.println(file.toString());
-                File parentFile = parent.toFile();
-                if (!parentFile.exists()) parentFile.mkdir();
-                File ficheiro = file.toFile();
-                if (!ficheiro.exists()) ficheiro.createNewFile();
-                FileOutputStream fos = new FileOutputStream(ficheiro,false);
-                socket.setSoTimeout(1000);
-                while (i < 25) {
-                    try {
-                        socket.send(outPacket);
-                        byte[] indata = new byte[1300];
-                        DatagramPacket inPacket = new DatagramPacket(indata, 1300);
-                        socket.receive(inPacket);
-                        ByteArrayInputStream bis = new ByteArrayInputStream(inPacket.getData());
-                        int opcode = bis.read();
-                        if (opcode == 3) {
-                            DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                            ACKPacket ack = new ACKPacket(data.getNumBloco());
-                            fos.write(data.getData(),0,data.getLengthData());
-                            System.out.println("Enviar ACK ao bloco " + ack.getNumBloco());
-                            outPacket = new DatagramPacket(ack.serialize(),ack.serialize().length,ip,port);
-                        }
-                        if (opcode == 5) {
-                            System.out.println("Recebido FIN");
-                            i = 25;
-                        }
-                    }
-                    catch (SocketTimeoutException e) {
-                        i++;
-                    }
-
-                }
-                fos.close();
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

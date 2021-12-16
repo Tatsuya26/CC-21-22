@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class ReadFilePacket {
     public static final byte opcode = 2;
-    public String filename;
+    private String filename;
 
     public String getFileName() {
         return this.filename;
