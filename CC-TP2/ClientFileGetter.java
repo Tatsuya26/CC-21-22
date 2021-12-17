@@ -57,7 +57,7 @@ public class ClientFileGetter implements Runnable{
                     boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
                     byte[] packet = inPacket.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
 
                     //Ler o byte que indica o opcode
                     int opcode = bis.read();
