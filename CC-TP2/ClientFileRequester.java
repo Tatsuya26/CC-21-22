@@ -14,12 +14,14 @@ public class ClientFileRequester implements Runnable{
         this.ip = ip;
         this.af = f;
     }
-
+    
     public void run() {
         try {
+            Security s = new Security();
             DatagramSocket socket = new DatagramSocket();
             RQFileInfoPacket rqPacket = new RQFileInfoPacket();
-            DatagramPacket outPacket = new DatagramPacket(rqPacket.serialize(),rqPacket.serialize().length,ip,80);
+            byte[] rqBytes = s.addSecurityToPacket(rqPacket.serialize());
+            DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,80);
             int i = 0;
             socket.setSoTimeout(1000);
             while (i < 1) {
@@ -31,7 +33,6 @@ public class ClientFileRequester implements Runnable{
                     socket.receive(inPacket);
                     int port = inPacket.getPort();
 
-                    Security s = new Security();
                     boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
                     byte[] packet = inPacket.getData();

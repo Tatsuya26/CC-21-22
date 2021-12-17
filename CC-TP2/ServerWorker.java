@@ -47,7 +47,7 @@ public class ServerWorker implements Runnable{
                     boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
 
                     byte[] packet = dp.getData();
-                    while (i < 25) {
+                    while (i < 50) {
                         System.out.print(packet[i]);
                         i++;
                     }
