@@ -43,13 +43,12 @@ public class ServerWorker implements Runnable{
             InetAddress clientIP = this.received.getAddress();
             while (i < 25){
                 try {
-                    DatagramPacket dp = this.received;
 
                     Security s = new Security();
-                    boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
+                    boolean authenticity = s.verifyPacketAuthenticity(this.received.getData());
 
                     if (authenticity) {
-                        byte[] packet = dp.getData();
+                        byte[] packet = this.received.getData();
                         ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
                         
                         // Lemos o opcode que veio no Packet.

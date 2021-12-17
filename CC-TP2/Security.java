@@ -45,7 +45,7 @@ public class Security {
 
         String sentHashedKey = new String(macR);
         String receivedHashedKey = new String(mac);
-        System.out.println("Recebida " + sentHashedKey);
+        System.out.println("Recebida " + receivedHashedKey);
         return sentHashedKey.compareTo(receivedHashedKey) == 0;
     }
 

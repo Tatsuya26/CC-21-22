@@ -11,6 +11,7 @@ public class RQFileInfoPacket {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeByte(RQFileInfoPacket.opcode);
+        while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
     }
 }
