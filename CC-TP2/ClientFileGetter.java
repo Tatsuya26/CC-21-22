@@ -19,6 +19,7 @@ public class ClientFileGetter implements Runnable{
         this.ip = ip;
         this.fi = fi;
         this.folder = f;
+        this.s = new Security();
     }
 
     public void run() {
