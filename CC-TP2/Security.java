@@ -45,10 +45,12 @@ public class Security {
 
         byte[] mac = getMac(message);
 
-        String sign = getSignature(mac);
-        String signR = getSignature(macR);
+        String sentHashedKey = new String(macR);
+        String receivedHashedKey = new String(mac);
 
-        return sign.compareTo(signR) == 0;
+        System.out.println(sentHashedKey);
+        System.out.println(receivedHashedKey);
+        return sentHashedKey.compareTo(receivedHashedKey) == 0;
     }
 
 }

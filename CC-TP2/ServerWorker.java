@@ -50,7 +50,6 @@ public class ServerWorker implements Runnable{
 
                     if (authenticity) {
                         byte[] packet = dp.getData();
-                        i = 25;    
                         ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
                         
                         // Lemos o opcode que veio no Packet.
