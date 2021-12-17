@@ -61,6 +61,7 @@ public class ClientFileGetter implements Runnable{
 
                     //Ler o byte que indica o opcode
                     int opcode = bis.read();
+                    System.out.println(opcode);
                     // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
                     if (opcode == 3) {
                         DataTransferPacket data = DataTransferPacket.deserialize(bis);

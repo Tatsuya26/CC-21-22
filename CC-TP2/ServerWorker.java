@@ -52,6 +52,7 @@ public class ServerWorker implements Runnable{
 
                     // Lemos o opcode que veio no Packet.
                     int opcode = bis.read();
+                    System.out.println(opcode);
 
                     // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
                     if (opcode == 1) {

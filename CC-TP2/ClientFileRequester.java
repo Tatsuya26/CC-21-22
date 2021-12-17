@@ -36,6 +36,7 @@ public class ClientFileRequester implements Runnable{
                     byte[] packet = inPacket.getData();
                     ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
                     int opcode = bis.read();
+                    System.out.println(opcode);
                     if (opcode == 3) {
                         DataTransferPacket data = DataTransferPacket.deserialize(bis);
                         readFileInfos(data);
