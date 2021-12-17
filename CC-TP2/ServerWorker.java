@@ -8,6 +8,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,18 +48,16 @@ public class ServerWorker implements Runnable{
                     Security s = new Security();
                     boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
 
-                    byte[] packet = dp.getData();
-                    while (i < 50) {
-                        System.out.print(packet[i]);
-                        i++;
-                    }
-                }
-                    /*ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
-
+                    byte[] packet = Arrays.copyOf(dp.getData(), 20);
+                    System.out.println(new String(packet,StandardCharsets.UTF_8));
+                    i = 25;    
+                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
+                    
                     // Lemos o opcode que veio no Packet.
                     int opcode = bis.read();
                     System.out.println(opcode);
-
+                }
+/*
                     // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
                     if (opcode == 1) {
                         sendFileInfo(clientIP,port);
