@@ -48,10 +48,9 @@ public class ServerWorker implements Runnable{
                     Security s = new Security();
                     boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
 
-                    byte[] packet = Arrays.copyOf(dp.getData(), 20);
-                    System.out.println(new String(packet,StandardCharsets.UTF_8));
+                    byte[] packet = dp.getData();
                     i = 25;    
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
+                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
                     
                     // Lemos o opcode que veio no Packet.
                     int opcode = bis.read();
