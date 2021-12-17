@@ -22,10 +22,11 @@ public class ClientFileRequester implements Runnable{
             DatagramPacket outPacket = new DatagramPacket(rqPacket.serialize(),rqPacket.serialize().length,ip,80);
             int i = 0;
             socket.setSoTimeout(1000);
-            while (i < 5) {
+            while (i < 1) {
                 try {
                     socket.send(outPacket);
-                    byte[] indata = new byte[1300];
+                    i++;
+                    /*byte[] indata = new byte[1300];
                     DatagramPacket inPacket = new DatagramPacket(indata,1300);
                     socket.receive(inPacket);
                     int port = inPacket.getPort();
@@ -50,7 +51,7 @@ public class ClientFileRequester implements Runnable{
                         byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
                         outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
                         socket.send(outPacket);
-                    }
+                    }*/
                 }
                 catch (SocketTimeoutException e) {
                     i++;

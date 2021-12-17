@@ -40,7 +40,6 @@ public class ServerWorker implements Runnable{
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
             while (i < 25){
-                try {
 
                     DatagramPacket dp = this.received;
 
@@ -48,7 +47,11 @@ public class ServerWorker implements Runnable{
                     boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
 
                     byte[] packet = dp.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
+                    for (byte b : packet) {
+                        System.out.print(b);
+                    }
+                }
+                    /*ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
 
                     // Lemos o opcode que veio no Packet.
                     int opcode = bis.read();
@@ -84,7 +87,7 @@ public class ServerWorker implements Runnable{
                     i++;
                 }
             }
-            socket.close();
+            socket.close();*/
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

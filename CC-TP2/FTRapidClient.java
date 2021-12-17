@@ -32,7 +32,7 @@ public class FTRapidClient implements Runnable{
             List<FileInfo> fis = this.ficheirosSincronizar.getList();
 
             for (FileInfo fi : fis) System.out.println(fi.toString());
-
+/*
             threads = new Thread[fis.size()];
             t = 0;
             for (FileInfo fi : fis) {
@@ -42,7 +42,7 @@ public class FTRapidClient implements Runnable{
                 t++;
             }
             
-            for (Thread th : threads) th.join();
+            for (Thread th : threads) th.join();*/
             
         }
         catch (InterruptedException e) {
