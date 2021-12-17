@@ -22,15 +22,13 @@ public class Security {
         return mac;
     }
 
-    private String getSignature(byte[] mac){
-        return Base64.getEncoder().withoutPadding().encodeToString(mac);
-    }
 
     public byte[] addSecurityToPacket (byte[] message){
         byte[] result = new byte[20 + message.length];
 
         byte[] mac = getMac(message);
-
+        String macS = new String(mac);
+        System.out.println("Enviada "+  macS);
         System.arraycopy(mac,0,result,0,20);
         System.arraycopy(message,0,result,20,message.length);
 
@@ -47,9 +45,7 @@ public class Security {
 
         String sentHashedKey = new String(macR);
         String receivedHashedKey = new String(mac);
-
-        System.out.println(sentHashedKey);
-        System.out.println(receivedHashedKey);
+        System.out.println("Recebida " + receivedHashedKey);
         return sentHashedKey.compareTo(receivedHashedKey) == 0;
     }
 
