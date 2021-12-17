@@ -27,7 +27,8 @@ public class ClientFileGetter implements Runnable{
             String filename = fi.getName();
             //Criar Pacote para pedir o ficheiro fi ao servidor.
             ReadFilePacket readFile = new ReadFilePacket(filename);
-            DatagramPacket outPacket = new DatagramPacket(readFile.serialize(), readFile.serialize().length,ip,80);
+            byte[] rfBytes = s.addSecurityToPacket(readFile.serialize());
+            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,80);
             int i = 0;
             // Resolver o nome do ficheiro para ficar na diretoria onde estamos a sincronizar. Neste caso a diretoria pai da dada nos parametros
             Path file = Path.of(filename);
@@ -48,39 +49,41 @@ public class ClientFileGetter implements Runnable{
             while (i < 5) {
                 try {
                     socket.send(outPacket);
-                    byte[] indata = new byte[1300];
-                    DatagramPacket inPacket = new DatagramPacket(indata, 1300);
+                    byte[] indata = new byte[1320];
+                    DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     socket.receive(inPacket);
                     int port = inPacket.getPort();
 
                     Security s = new Security();
                     boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
-                    byte[] packet = inPacket.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
+                    if (authenticity) {
+                        byte[] packet = inPacket.getData();
+                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
 
-                    //Ler o byte que indica o opcode
-                    int opcode = bis.read();
-                    System.out.println(opcode);
-                    // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
-                    if (opcode == 3) {
-                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                        ACKPacket ack = new ACKPacket(numB);
-                        if (numB == data.getNumBloco()) {
-                            fos.write(data.getData(),0,data.getLengthData());
-                            numB++;
+                        //Ler o byte que indica o opcode
+                        int opcode = bis.read();
+                        System.out.println(opcode);
+                        // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
+                        if (opcode == 3) {
+                            DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                            ACKPacket ack = new ACKPacket(numB);
+                            if (numB == data.getNumBloco()) {
+                                fos.write(data.getData(),0,data.getLengthData());
+                                numB++;
+                            }
+                            byte[] packetToSend = s.addSecurityToPacket(ack.serialize());
+                            outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
                         }
-                        byte[] packetToSend = s.addSecurityToPacket(ack.serialize());
-                        outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
+                        // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
+                        if (opcode == 5) {
+                            FINPacket fin = new FINPacket();
+                            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+                            socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                            i = 25;
+                        }
                     }
-                    // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
-                    if (opcode == 5) {
-                        FINPacket fin = new FINPacket();
-                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                        socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                        i = 25;
-                    }
-                }
+                }   
                 catch (SocketTimeoutException e) {
                     i++;
                 }

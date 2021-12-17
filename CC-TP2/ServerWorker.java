@@ -42,52 +42,53 @@ public class ServerWorker implements Runnable{
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
             while (i < 25){
-
+                try {
                     DatagramPacket dp = this.received;
 
                     Security s = new Security();
                     boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
 
-                    byte[] packet = dp.getData();
-                    i = 25;    
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
-                    
-                    // Lemos o opcode que veio no Packet.
-                    int opcode = bis.read();
-                    System.out.println(opcode);
-                }
-/*
-                    // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
-                    if (opcode == 1) {
-                        sendFileInfo(clientIP,port);
-                        FINPacket fin = new FINPacket();
-                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                        DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
-                        socket.send(outPacket);
+                    if (authenticity) {
+                        byte[] packet = dp.getData();
+                        i = 25;    
+                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                        
+                        // Lemos o opcode que veio no Packet.
+                        int opcode = bis.read();
+                        System.out.println(opcode);
+
+                        // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
+                        if (opcode == 1) {
+                            sendFileInfo(clientIP,port);
+                            FINPacket fin = new FINPacket();
+                            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+                            DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
+                            socket.send(outPacket);
+                        }
+                        // Se opcode == 2, recebemos um pedido de leitura de um ficheiro. Enviamos o ficheiro ao cliente e no fim enviamos um FINPacket.
+                        if (opcode == 2) {
+                            ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                            sendFile(readFile,clientIP,port);
+                            FINPacket fin = new FINPacket();
+                            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+                            DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
+                            socket.send(outPacket);
+                        }
+                        //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
+                        if (opcode == 5) {
+                            i = 25;
+                        }
+                        // Criar um novo pacote e esperar pela resposta do cliente.
+                        byte[] indata = new byte[1320];
+                        this.received = new DatagramPacket(indata,1320);
+                        socket.receive(this.received);
                     }
-                    // Se opcode == 2, recebemos um pedido de leitura de um ficheiro. Enviamos o ficheiro ao cliente e no fim enviamos um FINPacket.
-                    if (opcode == 2) {
-                        ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
-                        sendFile(readFile,clientIP,port);
-                        FINPacket fin = new FINPacket();
-                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                        DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
-                        socket.send(outPacket);
-                    }
-                    //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
-                    if (opcode == 5) {
-                        i = 25;
-                    }
-                    // Criar um novo pacote e esperar pela resposta do cliente.
-                    byte[] indata = new byte[1300];
-                    this.received = new DatagramPacket(indata,1300);
-                    socket.receive(this.received);
                 }
                 catch (SocketTimeoutException e) {
                     i++;
                 }
             }
-            socket.close();*/
+            socket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -189,22 +190,24 @@ public class ServerWorker implements Runnable{
                 while (!verificado) {
                     byte[] packetToSend = s.addSecurityToPacket(data.serialize());
                     socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                    byte[] indata = new byte[1300];
-                    DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                    byte[] indata = new byte[1320];
+                    DatagramPacket inPacket = new DatagramPacket(indata,1320);
                     socket.receive(inPacket);
 
                     boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
-                    byte[] packet = inPacket.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                    if (authenticity) {
+                        byte[] packet = inPacket.getData();
+                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
 
-                    int opcode = bis.read();
-                    if (opcode == 6) {
-                        ACKPacket ack = ACKPacket.deserialize(bis);
-                        // Verificar que o ACK corresponde ao Pacote que enviamos
-                        if (ack.getNumBloco() == data.getNumBloco()) {
-                            verificado = true;
-                            i = 5;
+                        int opcode = bis.read();
+                        if (opcode == 6) {
+                            ACKPacket ack = ACKPacket.deserialize(bis);
+                            // Verificar que o ACK corresponde ao Pacote que enviamos
+                            if (ack.getNumBloco() == data.getNumBloco()) {
+                                verificado = true;
+                                i = 5;
+                            }
                         }
                     }
                 }

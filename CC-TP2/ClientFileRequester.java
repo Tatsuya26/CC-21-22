@@ -24,35 +24,35 @@ public class ClientFileRequester implements Runnable{
             DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,80);
             int i = 0;
             socket.setSoTimeout(1000);
-            while (i < 1) {
+            while (i < 5) {
                 try {
                     socket.send(outPacket);
-                    i++;
-                    /*byte[] indata = new byte[1300];
-                    DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                    byte[] indata = new byte[1320];
+                    DatagramPacket inPacket = new DatagramPacket(indata,1320);
                     socket.receive(inPacket);
                     int port = inPacket.getPort();
 
                     boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
-
-                    byte[] packet = inPacket.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
-                    int opcode = bis.read();
-                    System.out.println(opcode);
-                    if (opcode == 3) {
-                        DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                        readFileInfos(data);
-                        ACKPacket ack = new ACKPacket(data.getNumBloco());
-                        byte[] packetToSend = s.addSecurityToPacket(ack.serialize());
-                        outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
+                    if (authenticity) {
+                        byte[] packet = inPacket.getData();
+                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
+                        int opcode = bis.read();
+                        System.out.println(opcode);
+                        if (opcode == 3) {
+                            DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                            readFileInfos(data);
+                            ACKPacket ack = new ACKPacket(data.getNumBloco());
+                            byte[] packetToSend = s.addSecurityToPacket(ack.serialize());
+                            outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
+                        }
+                        if (opcode == 5) {
+                            i = 5;
+                            FINPacket finPacket = new FINPacket();
+                            byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                            outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
+                            socket.send(outPacket);
+                        }
                     }
-                    if (opcode == 5) {
-                        i = 5;
-                        FINPacket finPacket = new FINPacket();
-                        byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
-                        outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
-                        socket.send(outPacket);
-                    }*/
                 }
                 catch (SocketTimeoutException e) {
                     i++;
