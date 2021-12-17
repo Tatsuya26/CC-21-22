@@ -47,8 +47,9 @@ public class ServerWorker implements Runnable{
                     boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
 
                     byte[] packet = dp.getData();
-                    for (byte b : packet) {
-                        System.out.print(b);
+                    while (i < 25) {
+                        System.out.print(packet[i]);
+                        i++;
                     }
                 }
                     /*ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,21,packet.length));
