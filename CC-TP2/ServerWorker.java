@@ -95,7 +95,7 @@ public class ServerWorker implements Runnable{
             String filename = f.getAbsolutePath();
             //Criar o path relativo para o ficheiro.
             Path file = Path.of(filename);
-            Path parent = folder.toPath();
+            Path parent = Path.of(folder.getAbsolutePath());
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
@@ -208,7 +208,7 @@ public class ServerWorker implements Runnable{
                 while (!verificado && enviados != data.size()) {
                     int atual = enviados;
                     verificado = false;
-                    numB = data.get(0).getNumBloco() + enviados;
+                    numB = data.get(enviados).getNumBloco();
                     i = 0;
                     while (this.window + enviados > atual && atual < data.size()) {
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
@@ -239,6 +239,8 @@ public class ServerWorker implements Runnable{
                         if (opcode == 6) {
                             ACKPacket ack = ACKPacket.deserialize(bis);
                             // Verificar que o ACK corresponde ao Pacote que enviamos
+                            System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
+                            System.out.println("A espera do bloco: " + numB);
                             if (ack.getNumBloco() == numB) {
                                 verificado = true;
                                 i = 5;
