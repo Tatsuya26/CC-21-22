@@ -241,7 +241,7 @@ public class ServerWorker implements Runnable{
                             // Verificar que o ACK corresponde ao Pacote que enviamos
                             System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
                             System.out.println("A espera do bloco: " + numB);
-                            if (ack.getNumBloco() > data.get(0).getNumBloco()) {
+                            if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
                                 if (ack.getNumBloco() == numB) {
                                     verificado = true;
                                     i = 5;
