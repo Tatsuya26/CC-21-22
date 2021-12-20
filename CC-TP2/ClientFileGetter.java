@@ -72,15 +72,12 @@ public class ClientFileGetter implements Runnable{
                             
                             //Ler o byte que indica o opcode
                             int opcode = bis.read();
-                            System.out.println(opcode);
                             // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
                             if (opcode == 3) {
                                 atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                    if (dtFiles.get(data.getNumBloco() - numBinicial) == null) { 
                                         dtFiles.add(data.getNumBloco() - numBinicial, data);
-                                    }
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
