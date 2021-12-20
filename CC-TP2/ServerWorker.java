@@ -212,6 +212,7 @@ public class ServerWorker implements Runnable{
                     while (this.window + enviados > atual && atual < data.size()) {
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                        System.out.print("Enviado pacote com o número " + data.get(atual).getNumBloco());
                         atual++;
                         numB++;
                     }
