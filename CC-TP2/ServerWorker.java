@@ -208,6 +208,7 @@ public class ServerWorker implements Runnable{
                 while (!verificado && enviados != data.size()) {
                     int atual = enviados;
                     verificado = false;
+                    numB = data.get(0).getNumBloco() + enviados;
                     i = 0;
                     while (this.window + enviados > atual && atual < data.size()) {
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());

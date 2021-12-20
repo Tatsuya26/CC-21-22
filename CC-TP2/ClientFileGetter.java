@@ -61,8 +61,10 @@ public class ClientFileGetter implements Runnable{
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
+                    for (int index = 0 ; i < window ; i++) dtFiles.add(index,null);
+                    
+                    int numBinicial = numB;
                     while (window > atual) {
-                        int numBinicial = numB;
                         socket.receive(inPacket);
                         this.port = inPacket.getPort();
                         
@@ -100,33 +102,23 @@ public class ClientFileGetter implements Runnable{
                         }
                     }
                     if (i < 5) {
-                        if (dtFiles.size() == window) {
-                            for (DataTransferPacket dtp : dtFiles) {
-                                fos.write(dtp.getData());
+                        for (int index = 0; index < dtFiles.size();index++) {
+                            if (dtFiles.get(index) == null) {
+                                numB = numB + index;
+                                index = dtFiles.size();
+                                window = 1;
+                            }
+                            else {
+                                fos.write(dtFiles.get(index).getData());
                                 numB++;
                             }
-                            ACKPacket ack = new ACKPacket(numB);
-                            byte[] outData = s.addSecurityToPacket(ack.serialize());
-                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
-                            window++;
                         }
-                        else {
-                            for (int index = 0; index < dtFiles.size();index++) {
-                                if (dtFiles.get(index) == null) {
-                                    numB = numB + index;
-                                    index = dtFiles.size();
-                                }
-                                else {
-                                    fos.write(dtFiles.get(index).getData());
-                                }
-                            }
-                            window = 1;
-                            ACKPacket ack = new ACKPacket(numB);
-                            byte[] outData = s.addSecurityToPacket(ack.serialize());
-                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
-                        }
+                        if (numB == window + numBinicial) window++;
+                        ACKPacket ack = new ACKPacket(numB);
+                        byte[] outData = s.addSecurityToPacket(ack.serialize());
+                        outPacket = new DatagramPacket(outData, outData.length,ip,port);
                     }
-                }   
+                }
                 catch (SocketTimeoutException e) {
                     i++;
                 }
