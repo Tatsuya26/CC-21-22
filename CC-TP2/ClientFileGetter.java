@@ -61,7 +61,7 @@ public class ClientFileGetter implements Runnable{
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
-                    for (int index = 0 ; i < window ; i++) dtFiles.add(index,null);
+                    for (int index = 0 ; index < window ; index++) dtFiles.add(index,null);
                     
                     int numBinicial = numB;
                     while (window > atual) {
