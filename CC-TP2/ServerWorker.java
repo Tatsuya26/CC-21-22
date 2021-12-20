@@ -246,8 +246,9 @@ public class ServerWorker implements Runnable{
                                     window = data.size()+1;
                                     verificado = true;
                                     enviados += window;
+                                    i = 5;
                                 }
-                                if (ack.getNumBloco() == numB) {
+                                else if (ack.getNumBloco() == numB) {
                                     i = 5;
                                     verificado = true;
                                     enviados += window;
