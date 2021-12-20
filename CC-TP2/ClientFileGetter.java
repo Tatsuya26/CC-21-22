@@ -105,7 +105,7 @@ public class ClientFileGetter implements Runnable{
                         System.out.println(dtFiles.size());
                         for (int index = 0; index < dtFiles.size();index++) {
                             if (dtFiles.get(index) == null) {
-                                numB = numB + index;
+                                numB = numBinicial + index;
                                 index = dtFiles.size();
                                 window = 1;
                             }
