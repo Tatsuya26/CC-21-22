@@ -81,7 +81,7 @@ public class ClientFileGetter implements Runnable{
                                 atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                        dtFiles.add(data.getNumBloco() - numBinicial, data);
+                                    dtFiles.set(data.getNumBloco() - numBinicial, data);
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
