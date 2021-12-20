@@ -218,7 +218,7 @@ public class ServerWorker implements Runnable{
                     }
 
                     if (this.window > data.size()) {
-                        FINPacket fin = new FINPacket();
+                        FINPacket fin = new FINPacket((byte) 1);
                         byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
                         DatagramPacket finPacket = (new DatagramPacket(packetToSend,packetToSend.length,ip,port));
                         socket.send(finPacket);
