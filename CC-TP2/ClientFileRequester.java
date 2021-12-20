@@ -60,38 +60,45 @@ public class ClientFileRequester implements Runnable{
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                             if (opcode == 5) {
-                                FINPacket fin = new FINPacket();
-                                window = atual;
-                                byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                                socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                                i = 5;
+                                FINPacket fin = FINPacket.deserialise(bis);
+                                if (fin.getFincode() == 1) {
+                                    window = atual;
+                                }
+                                else {
+                                    FINPacket finPacket = new FINPacket();
+                                    byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                                    socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                                    i = 5;
+                                }
                             }
                         }
                     }
-                    if (dtFiles.size() == window) {
-                        for (DataTransferPacket dtp : dtFiles) {
-                            readFileInfos(dtp);
-                            numB++;
-                        }
-                        ACKPacket ack = new ACKPacket(numB);
-                        byte[] outData = s.addSecurityToPacket(ack.serialize());
-                        outPacket = new DatagramPacket(outData, outData.length,ip,port);
-                        window++;
-                    }
-                    else {
-                        for (int index = 0; index < dtFiles.size();index++) {
-                            if (dtFiles.get(index) == null) {
-                                numB = numB + index;
-                                index = dtFiles.size();
+                    if (i < 5) {
+                        if (dtFiles.size() == window) {
+                            for (DataTransferPacket dtp : dtFiles) {
+                                readFileInfos(dtp);
+                                numB++;
                             }
-                            else {
-                                readFileInfos(dtFiles.get(index));
-                            }
+                            ACKPacket ack = new ACKPacket(numB);
+                            byte[] outData = s.addSecurityToPacket(ack.serialize());
+                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
+                            window++;
                         }
-                        window = 1;
-                        ACKPacket ack = new ACKPacket(numB);
-                        byte[] outData = s.addSecurityToPacket(ack.serialize());
-                        outPacket = new DatagramPacket(outData, outData.length,ip,port);
+                        else {
+                            for (int index = 0; index < dtFiles.size();index++) {
+                                if (dtFiles.get(index) == null) {
+                                    numB = numB + index;
+                                    index = dtFiles.size();
+                                }
+                                else {
+                                    readFileInfos(dtFiles.get(index));
+                                }
+                            }
+                            window = 1;
+                            ACKPacket ack = new ACKPacket(numB);
+                            byte[] outData = s.addSecurityToPacket(ack.serialize());
+                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
+                        }
                     }
                 }   
                 catch (SocketTimeoutException e) {

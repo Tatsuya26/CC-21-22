@@ -94,6 +94,7 @@ public class ClientFileGetter implements Runnable{
                                     byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
                                     socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
                                     i = 5;
+                                    window = atual;
                                 }
                             }
                         }
@@ -133,6 +134,7 @@ public class ClientFileGetter implements Runnable{
             fos.close();
             ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
+            System.out.println("Ficheiro "+ filename +" acabado de receber");
         }
         catch (IOException e) {
             e.printStackTrace();
