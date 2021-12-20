@@ -205,7 +205,7 @@ public class ServerWorker implements Runnable{
         while (i < 5) {
             try {
                 // Enquando nao se verificar que o cliente recebeu o pacote, enviamos o pacote.
-                while (!verificado && enviados != data.size()) {
+                while (!verificado && enviados < data.size()) {
                     int atual = enviados;
                     verificado = false;
                     numB = data.get(enviados).getNumBloco();
@@ -242,9 +242,14 @@ public class ServerWorker implements Runnable{
                             System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
                             System.out.println("A espera do bloco: " + numB);
                             if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
-                                if (ack.getNumBloco() == numB) {
+                                if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
+                                    window = data.size()+1;
                                     verificado = true;
+                                    enviados += window;
+                                }
+                                if (ack.getNumBloco() == numB) {
                                     i = 5;
+                                    verificado = true;
                                     enviados += window;
                                     this.window++;
                                 }
