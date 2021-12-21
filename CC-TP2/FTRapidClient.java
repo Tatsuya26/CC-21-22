@@ -43,6 +43,7 @@ public class FTRapidClient  extends TimerTask{
                     if (fi.getIP() != null) 
                         threads[t].start();
                     t++;
+                    fi.setIP(null);
                 }
 
                 for (Thread th : threads) th.join();
