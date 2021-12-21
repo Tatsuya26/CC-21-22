@@ -28,7 +28,7 @@ public class ClientFileRequester implements Runnable{
             DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,80);
             int i = 0;
             int numB = 1;
-            socket.setSoTimeout(1000);
+            socket.setSoTimeout(5000);
             while (i < 5) {
                 try {
                     socket.send(outPacket);

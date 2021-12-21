@@ -1,12 +1,10 @@
 import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -18,11 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ServerWorker implements Runnable{
-    public DatagramPacket received;
-    public DatagramSocket socket;
-    public File folder;
-    public InetAddress[] ips;
-    public Security s;
     public BufferedWriter myWriter;
     private DatagramPacket received;
     private DatagramSocket socket;
@@ -40,7 +33,6 @@ public class ServerWorker implements Runnable{
     public ServerWorker(DatagramPacket received,File folder) {
         this.received = received;
         this.folder = folder;
-        this.ips = ips;
         
         try {
             whenWriteStringUsingBufferedWritter_thenCorrect();

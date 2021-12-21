@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
 
-public class FTRapidClient implements Runnable{
+public class FTRapidClient  extends TimerTask{
     public final static int length = 1320;
     public File folder;
     public InetAddress[] ips;
@@ -19,6 +20,7 @@ public class FTRapidClient implements Runnable{
 
     public void run() {
         try{
+            System.out.println("A iniciar processo de sincronizacao");
             Thread[] threads = new Thread[ips.length];
             int t = 0;
             for (InetAddress i : this.ips) {
@@ -31,18 +33,22 @@ public class FTRapidClient implements Runnable{
 
             List<FileInfo> fis = this.ficheirosSincronizar.getList();
 
-            for (FileInfo fi : fis) System.out.println(fi.toString());
+            boolean sincronizado = this.ficheirosSincronizar.isSincronizado();
+            if (!sincronizado) {
 
-            threads = new Thread[fis.size()];
-            t = 0;
-            for (FileInfo fi : fis) {
-                threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
-                if (fi.getIP() != null) 
-                    threads[t].start();
-                t++;
+                threads = new Thread[fis.size()];
+                t = 0;
+                for (FileInfo fi : fis) {
+                    threads[t] = new Thread(new ClientFileGetter(fi.getIP(),fi,folder));
+                    if (fi.getIP() != null) 
+                        threads[t].start();
+                    t++;
+                }
+
+                for (Thread th : threads) th.join();
             }
+            System.out.println("Fim do processo de sincronizacao");
             
-            for (Thread th : threads) th.join();
             
         }
         catch (InterruptedException e) {
