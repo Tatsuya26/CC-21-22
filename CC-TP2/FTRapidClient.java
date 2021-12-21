@@ -33,6 +33,8 @@ public class FTRapidClient  extends TimerTask{
 
             List<FileInfo> fis = this.ficheirosSincronizar.getList();
 
+            for (FileInfo f : fis) System.out.println(f.toString());
+
             boolean sincronizado = this.ficheirosSincronizar.isSincronizado();
             if (!sincronizado) {
 
