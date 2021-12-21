@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/home/tatsuya26/Desktop/bcprov-jdk15on-170.jar"
+    ]
+}

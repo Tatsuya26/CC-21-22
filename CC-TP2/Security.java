@@ -1,6 +1,5 @@
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -28,7 +27,6 @@ public class Security {
 
         byte[] mac = getMac(message);
         String macS = new String(mac);
-        System.out.println("Enviada "+  macS);
         System.arraycopy(mac,0,result,0,20);
         System.arraycopy(message,0,result,20,message.length);
 
@@ -45,7 +43,6 @@ public class Security {
 
         String sentHashedKey = new String(macR);
         String receivedHashedKey = new String(mac);
-        System.out.println("Recebida " + receivedHashedKey);
         return sentHashedKey.compareTo(receivedHashedKey) == 0;
     }
 

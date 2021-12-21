@@ -1,0 +1,8 @@
+Pedir ficheiro XYZ;
+DOWNLOAD ficheiro;
+Datapacket 1;
+Ack1;
+Datapacket 2;
+Datapacket 3;
+Ack 2;
+Ack 3;
