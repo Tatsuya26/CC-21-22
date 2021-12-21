@@ -32,7 +32,6 @@ public class ClientFileRequester implements Runnable{
             while (i < 25) {
                 try {
                     socket.send(outPacket);
-                    System.out.println("Enviado ACK com o número " + numB);
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;

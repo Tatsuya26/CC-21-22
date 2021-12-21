@@ -56,7 +56,7 @@ public class ServerWorker implements Runnable{
             // Vemos a informação do cliente no Packet.
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            while (i < 25){
+            while (i < 10){
                 try {
 
                     this.s = new Security();
@@ -80,7 +80,7 @@ public class ServerWorker implements Runnable{
                         }
                         //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
                         if (opcode == 5) {
-                            i = 25;
+                            i = 10;
                         }
                         // Criar um novo pacote e esperar pela resposta do cliente.
                         byte[] indata = new byte[1320];
@@ -186,7 +186,6 @@ public class ServerWorker implements Runnable{
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {
-            System.out.println("Ficheiro nao existe");
             this.myWriter.append("Ficheiro nao existe \n");
 
             return;
@@ -236,7 +235,6 @@ public class ServerWorker implements Runnable{
                     while (this.window + enviados > atual && atual < data.size()) {
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                        System.out.println("Enviado pacote com o número " + data.get(atual).getNumBloco());
                         atual++;
                         numB++;
                     }
@@ -262,8 +260,6 @@ public class ServerWorker implements Runnable{
                         if (opcode == 6) {
                             ACKPacket ack = ACKPacket.deserialize(bis);
                             // Verificar que o ACK corresponde ao Pacote que enviamos
-                            System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
-                            System.out.println("A espera do bloco: " + numB);
                             if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
                                 if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
                                     window = data.size()+1;

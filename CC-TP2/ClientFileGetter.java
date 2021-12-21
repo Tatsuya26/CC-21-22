@@ -70,7 +70,6 @@ public class ClientFileGetter implements Runnable{
             while (i < 5) {
                 try {
                     socket.send(outPacket);
-                    System.out.println("Enviado ACK com o número " + numB);
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
@@ -116,7 +115,6 @@ public class ClientFileGetter implements Runnable{
                         }
                     }
                     if (i < 5) {
-                        System.out.println(dtFiles.size());
                         for (int index = 0; index < dtFiles.size();index++) {
                             if (dtFiles.get(index) == null) {
                                 index = dtFiles.size();
