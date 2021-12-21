@@ -17,11 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ServerWorker implements Runnable{
-<<<<<<< HEAD
     public InetAddress[] ips;
     public Security s;
-=======
->>>>>>> 1254c7e32672f57ef3c5b113fa3a0ff9b5e01a70
     public BufferedWriter myWriter;
     public BufferedWriter http_info;
     private DatagramPacket received;
