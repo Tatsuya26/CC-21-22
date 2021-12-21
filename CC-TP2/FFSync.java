@@ -3,6 +3,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class FFSync {
     public static void main(String[] args) throws InterruptedException {
@@ -17,14 +20,16 @@ public class FFSync {
             for (int i = 1 ; i < args.length; i++) 
             ips[i-1] = InetAddress.getByName(args[i]);
             File diretoria = new File(pasta);
-            TimerTask task = new FTRapidClient(diretoria, ips);
-            Timer timer = new Timer(true);
+            ScheduledExecutorService sec = Executors.newScheduledThreadPool(1);
+            //TimerTask task = new FTRapidClient(diretoria, ips);
+            //Timer timer = new Timer(true);
             Thread serverUDP = new Thread(new FTRapidServer(diretoria,ips));
             Thread http = new Thread(new HTTPServer());
             serverUDP.start();
             http.start();
             while (true) {
-                timer.scheduleAtFixedRate(task, 0, 60000);
+                sec.scheduleAtFixedRate(new FTRapidClient(diretoria, ips), 0, 60, TimeUnit.SECONDS);
+                sec.awaitTermination(60, TimeUnit.SECONDS);
             }
         }
         catch (IOException e) {
