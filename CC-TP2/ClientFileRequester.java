@@ -4,15 +4,19 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ClientFileRequester implements Runnable{
     private InetAddress ip;
     private ArmazemFicheiro af;
+    private int window;
 
     public ClientFileRequester(InetAddress ip,ArmazemFicheiro f) {
         this.ip = ip;
         this.af = f;
+        this.window = 1;
     }
     
     public void run() {
@@ -23,36 +27,80 @@ public class ClientFileRequester implements Runnable{
             byte[] rqBytes = s.addSecurityToPacket(rqPacket.serialize());
             DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,80);
             int i = 0;
+            int numB = 1;
             socket.setSoTimeout(1000);
             while (i < 5) {
                 try {
                     socket.send(outPacket);
+                    System.out.println("Enviado ACK com o número " + numB);
                     byte[] indata = new byte[1320];
-                    DatagramPacket inPacket = new DatagramPacket(indata,1320);
-                    socket.receive(inPacket);
-                    int port = inPacket.getPort();
-
-                    boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
-                    if (authenticity) {
-                        byte[] packet = inPacket.getData();
-                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
-                        int opcode = bis.read();
-                        if (opcode == 3) {
-                            DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                            readFileInfos(data);
-                            ACKPacket ack = new ACKPacket(data.getNumBloco());
-                            byte[] packetToSend = s.addSecurityToPacket(ack.serialize());
-                            outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
-                        }
-                        if (opcode == 5) {
-                            i = 5;
-                            FINPacket finPacket = new FINPacket();
-                            byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
-                            outPacket = new DatagramPacket(packetToSend,packetToSend.length,ip,port);
-                            socket.send(outPacket);
+                    DatagramPacket inPacket = new DatagramPacket(indata, 1320);
+                    int atual = 0;
+                    int port = 0;
+                    List<DataTransferPacket> dtFiles = new ArrayList<>();
+                    while (window > atual) {
+                        int numBinicial = numB;
+                        socket.receive(inPacket);
+                        port = inPacket.getPort();
+                        boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
+                        
+                        if (authenticity) {
+                            byte[] packet = inPacket.getData();
+                            ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                            
+                            //Ler o byte que indica o opcode
+                            int opcode = bis.read();
+                            // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
+                            if (opcode == 3) {
+                                atual++;
+                                DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                                if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
+                                        dtFiles.add(data.getNumBloco() - numBinicial, data);
+                                }
+                            }
+                            // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
+                            if (opcode == 5) {
+                                FINPacket fin = FINPacket.deserialise(bis);
+                                if (fin.getFincode() == 1) {
+                                    window = atual;
+                                }
+                                else {
+                                    FINPacket finPacket = new FINPacket();
+                                    byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                                    socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                                    i = 5;
+                                }
+                            }
                         }
                     }
-                }
+                    if (i < 5) {
+                        if (dtFiles.size() == window) {
+                            for (DataTransferPacket dtp : dtFiles) {
+                                readFileInfos(dtp);
+                                numB++;
+                            }
+                            ACKPacket ack = new ACKPacket(numB);
+                            byte[] outData = s.addSecurityToPacket(ack.serialize());
+                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
+                            window++;
+                        }
+                        else {
+                            for (int index = 0; index < dtFiles.size();index++) {
+                                if (dtFiles.get(index) == null) {
+                                    numB = numB + index;
+                                    index = dtFiles.size();
+                                }
+                                else {
+                                    readFileInfos(dtFiles.get(index));
+                                }
+                            }
+                            window = 1;
+                            ACKPacket ack = new ACKPacket(numB);
+                            byte[] outData = s.addSecurityToPacket(ack.serialize());
+                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
+                        }
+                    }
+                }   
                 catch (SocketTimeoutException e) {
                     i++;
                 }

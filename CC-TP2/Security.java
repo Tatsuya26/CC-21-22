@@ -26,7 +26,6 @@ public class Security {
         byte[] result = new byte[20 + message.length];
 
         byte[] mac = getMac(message);
-        String macS = new String(mac);
         System.arraycopy(mac,0,result,0,20);
         System.arraycopy(message,0,result,20,message.length);
 

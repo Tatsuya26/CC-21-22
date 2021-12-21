@@ -25,7 +25,7 @@ public class ArmazemFicheiro {
         for (File f : ficheirosSistema) {
             String filename = f.getAbsolutePath();
             Path file = Path.of(filename);
-            Path parent = diretoria.toPath();
+            Path parent = Path.of(diretoria.getAbsolutePath());
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             adicionaFileInfo(fi);
