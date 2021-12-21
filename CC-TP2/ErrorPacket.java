@@ -29,6 +29,7 @@ public class ErrorPacket {
         dos.writeByte(ErrorPacket.opcode);
         dos.writeByte(this.errorCode);
         dos.writeUTF(errorDescription);
+        while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
     }
 

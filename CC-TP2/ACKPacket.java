@@ -21,6 +21,7 @@ public class ACKPacket {
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeByte(ACKPacket.opcode);
         dos.writeShort(this.numBloco);
+        while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
     }
 

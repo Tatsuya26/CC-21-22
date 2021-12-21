@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FTRapidClient implements Runnable{
-    public final static int length = 1300;
+    public final static int length = 1320;
     public File folder;
     public InetAddress[] ips;
     public ArmazemFicheiro ficheirosSincronizar;
@@ -22,7 +22,7 @@ public class FTRapidClient implements Runnable{
             Thread[] threads = new Thread[ips.length];
             int t = 0;
             for (InetAddress i : this.ips) {
-                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar,folder.getName()));
+                threads[t] = new Thread(new ClientFileRequester(i,this.ficheirosSincronizar));
                 threads[t].start();
                 t++;
             }

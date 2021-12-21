@@ -11,7 +11,7 @@ public class FINPacket {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeByte(FINPacket.opcode);
-        dos.flush();
+        while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
     }
 }

@@ -1,3 +1,7 @@
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.IOException;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -8,9 +12,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.nio.file.Files;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,11 +25,26 @@ public class ServerWorker implements Runnable{
     public File folder;
     public InetAddress[] ips;
     public Security s;
+    public BufferedWriter myWriter;
+
+
+    public void whenWriteStringUsingBufferedWritter_thenCorrect() throws IOException {
+        this.myWriter = new BufferedWriter(new FileWriter("Logs",true));
+        this.myWriter.write("Logs:\n");
+    }
+
 
     public ServerWorker(DatagramPacket received,File folder,InetAddress[] ips) {
         this.received = received;
         this.folder = folder;
         this.ips = ips;
+        
+        try {
+            whenWriteStringUsingBufferedWritter_thenCorrect();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
         try {
             this.socket = new DatagramSocket();
         } catch (SocketException e) {
@@ -44,48 +63,42 @@ public class ServerWorker implements Runnable{
             while (i < 25){
                 try {
 
-                    DatagramPacket dp = this.received;
+                    this.s = new Security();
+                    boolean authenticity = s.verifyPacketAuthenticity(this.received.getData());
 
-                    Security s = new Security();
-                    boolean authenticity = s.verifyPacketAuthenticity(dp.getData());
-
-                    byte[] packet = dp.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
-
-                    // Lemos o opcode que veio no Packet.
-                    int opcode = bis.read();
-
-                    // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
-                    if (opcode == 1) {
-                        RQFileInfoPacket rq = RQFileInfoPacket.deserialise(bis);
-                        sendFileInfo(clientIP,port,rq.getFileToSync());
-                        FINPacket fin = new FINPacket();
-                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                        DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
-                        socket.send(outPacket);
-                    }
-                    // Se opcode == 2, recebemos um pedido de leitura de um ficheiro. Enviamos o ficheiro ao cliente e no fim enviamos um FINPacket.
-                    if (opcode == 2) {
-                        ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
-                        sendFile(readFile,clientIP,port);
-                        FINPacket fin = new FINPacket();
-                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                        DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
-                        socket.send(outPacket);
-                    }
-                    //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
-                    if (opcode == 5) {
+                    if (authenticity) {
+                        byte[] packet = this.received.getData();
+                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
                         
-                        System.out.println("Recebido pedido de fim de conexão");
-                        FINPacket fin = new FINPacket();
-                        sendPacket = new DatagramPacket(fin.serialize(), fin.serialize().length,clientIP,port);
-                        socket.send(sendPacket);
-                        i = 25;
+                        // Lemos o opcode que veio no Packet.
+                        int opcode = bis.read();
+
+                        // Se opcode == 1 , enviamos a informaçao dos ficheiros para o cliente e no fim,enviamos um FINPacket.
+                        if (opcode == 1) {
+                            sendFileInfo(clientIP,port);
+                            FINPacket fin = new FINPacket();
+                            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+                            DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
+                            socket.send(outPacket);
+                        }
+                        // Se opcode == 2, recebemos um pedido de leitura de um ficheiro. Enviamos o ficheiro ao cliente e no fim enviamos um FINPacket.
+                        if (opcode == 2) {
+                            ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                            sendFile(readFile,clientIP,port);
+                            FINPacket fin = new FINPacket();
+                            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+                            DatagramPacket outPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
+                            socket.send(outPacket);
+                        }
+                        //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
+                        if (opcode == 5) {
+                            i = 25;
+                        }
+                        // Criar um novo pacote e esperar pela resposta do cliente.
+                        byte[] indata = new byte[1320];
+                        this.received = new DatagramPacket(indata,1320);
+                        socket.receive(this.received);
                     }
-                    // Criar um novo pacote e esperar pela resposta do cliente.
-                    byte[] indata = new byte[1300];
-                    this.received = new DatagramPacket(indata,1300);
-                    socket.receive(this.received);
                 }
                 catch (SocketTimeoutException e) {
                     i++;
@@ -99,19 +112,17 @@ public class ServerWorker implements Runnable{
     }
 
     // Envia ao cliente a informação dos ficheiros na sua diretoria a sincronizar.
-    public void sendFileInfo(InetAddress ip,int port,String ftoSync) throws IOException{
-        //Criar array com todos os ficheiros da diretoria;
-        File[] subFicheiros = folder.getParentFile().listFiles();
+    public void sendFileInfo(InetAddress ip,int port) throws IOException{
         //Abrir stream onde escrevemos os bytes;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         int numB = 1;
         //Percorremos o array dos ficheiros, vemos a sua informação e escrevemos no stream;
-        List<File> fSend = escolherFicheirosEnviar(subFicheiros, ftoSync);
+        List<File> fSend = escolherFicheirosEnviar(folder);
         for (File f  : fSend) {
             String filename = f.getAbsolutePath();
             //Criar o path relativo para o ficheiro.
             Path file = Path.of(filename);
-            Path parent = folder.toPath().getParent();
+            Path parent = folder.toPath();
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
@@ -133,11 +144,16 @@ public class ServerWorker implements Runnable{
         sendDataPacket(fileInfos, ip, port);
     }
 
-    private List<File> escolherFicheirosEnviar(File[] subFicheiros,String ficheiroSync) {
+    private List<File> escolherFicheirosEnviar(File pasta) {
         List<File> res = new ArrayList<>();
+        File[] subFicheiros = pasta.listFiles();
         for (File f  : subFicheiros) {
-            if (f.getName().compareTo(ficheiroSync) == 0 || f.getName().compareTo(folder.getName()) == 0) {
-                verFicheirosPasta(f,res);
+            if (!f.isHidden()) {
+                if (f.isDirectory())
+                    verFicheirosPasta(f, res);
+                else {
+                    res.add(f);
+                }
             }
         }
         return res;
@@ -146,21 +162,30 @@ public class ServerWorker implements Runnable{
     private void verFicheirosPasta(File pasta,List<File> res) {
         File[] ficheirosPasta = pasta.listFiles();
         for (File f  : ficheirosPasta) {
-            if (f.isDirectory())
-                verFicheirosPasta(f, res);
-            else res.add(f);
+            if (!f.isHidden()) {
+                if (f.isDirectory())
+                    verFicheirosPasta(f, res);
+                else {
+                    res.add(f);
+                }
+            }
         }
     }
 
+
+    //TODO: OLHA AQUI 
     // Envia ficheiro ao cliente, verificando sempre que este recebe cada bloco de dados.
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
-        Path file = Path.of(folder.getAbsolutePath()).getParent().resolve(f);
+        Path file = Path.of(folder.getAbsolutePath()).resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
+        this.myWriter.append("A enviar o ficheiro " + file.toString()+ "\n");
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {
             System.out.println("Ficheiro nao existe");
+            this.myWriter.append("Ficheiro nao existe \n");
+
             return;
         }
         FileInputStream fis = new FileInputStream(ficheiro);
@@ -172,7 +197,10 @@ public class ServerWorker implements Runnable{
             sendDataPacket(dtFile, clientIP, port);
         }
         System.out.println("Ficheiro acabado de enviar");
+        this.myWriter.append("Ficheiro acabado de enviar\n");
+        this.myWriter.close();
         fis.close();
+        
     }
 
     // Envia um DataTransferPacket para o ip e port designados.
@@ -186,22 +214,24 @@ public class ServerWorker implements Runnable{
                 while (!verificado) {
                     byte[] packetToSend = s.addSecurityToPacket(data.serialize());
                     socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                    byte[] indata = new byte[1300];
-                    DatagramPacket inPacket = new DatagramPacket(indata,1300);
+                    byte[] indata = new byte[1320];
+                    DatagramPacket inPacket = new DatagramPacket(indata,1320);
                     socket.receive(inPacket);
 
                     boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
-                    byte[] packet = inPacket.getData();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                    if (authenticity) {
+                        byte[] packet = inPacket.getData();
+                        ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
 
-                    int opcode = bis.read();
-                    if (opcode == 6) {
-                        ACKPacket ack = ACKPacket.deserialize(bis);
-                        // Verificar que o ACK corresponde ao Pacote que enviamos
-                        if (ack.getNumBloco() == data.getNumBloco()) {
-                            verificado = true;
-                            i = 5;
+                        int opcode = bis.read();
+                        if (opcode == 6) {
+                            ACKPacket ack = ACKPacket.deserialize(bis);
+                            // Verificar que o ACK corresponde ao Pacote que enviamos
+                            if (ack.getNumBloco() == data.getNumBloco()) {
+                                verificado = true;
+                                i = 5;
+                            }
                         }
                     }
                 }

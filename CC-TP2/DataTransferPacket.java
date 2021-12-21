@@ -36,6 +36,7 @@ public class DataTransferPacket {
         dos.writeShort(this.numeroBloco);
         dos.writeShort(this.data.length);
         dos.write(this.data);
+        while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
     }
 

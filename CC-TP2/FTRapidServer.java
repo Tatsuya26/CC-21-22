@@ -5,7 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class FTRapidServer implements Runnable{
-    public final static int length = 1300;
+    public final static int length = 1320;
     public File folder;
     public InetAddress[] ips;
 

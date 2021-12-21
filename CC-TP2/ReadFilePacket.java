@@ -22,6 +22,7 @@ public class ReadFilePacket {
         dos.writeByte(ReadFilePacket.opcode);
         dos.writeBytes(this.filename);
         dos.writeByte(0);
+        while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
     }
 
