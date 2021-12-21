@@ -1,8 +1,5 @@
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -19,9 +16,9 @@ public class FTRapidServer implements Runnable{
     
     public void run() {
         try {
-            byte[] buffer = new byte[length];
             DatagramSocket serverSocket = new DatagramSocket(80);
             while (true) {
+                byte[] buffer = new byte[length];
                 DatagramPacket receiver = new DatagramPacket(buffer, length);
                 serverSocket.receive(receiver);
                 Thread executante = new Thread(new ServerWorker(receiver,folder));

@@ -14,6 +14,7 @@ public class FileInfo {
     public FileInfo(String nome,String lastMod) {
         this.name = nome;
         this.time = lastMod;
+        this.ip = null;
     }
 
     public String getName () {

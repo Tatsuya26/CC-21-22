@@ -29,10 +29,9 @@ public class ClientFileRequester implements Runnable{
             int i = 0;
             int numB = 1;
             socket.setSoTimeout(1000);
-            while (i < 5) {
+            while (i < 25) {
                 try {
                     socket.send(outPacket);
-                    System.out.println("Enviado ACK com o número " + numB);
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
@@ -55,7 +54,7 @@ public class ClientFileRequester implements Runnable{
                                 atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                        dtFiles.add(data.getNumBloco() - numBinicial, data);
+                                        dtFiles.add(data);
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
@@ -68,7 +67,7 @@ public class ClientFileRequester implements Runnable{
                                     FINPacket finPacket = new FINPacket();
                                     byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
                                     socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                                    i = 5;
+                                    i = 25;
                                 }
                             }
                         }

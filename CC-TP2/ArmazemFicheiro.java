@@ -63,5 +63,12 @@ public class ArmazemFicheiro {
         return this.ficheiros.values().stream().collect(Collectors.toList());
     }
 
+    public boolean isSincronizado() {
+        for (FileInfo f : this.ficheiros.values()) {
+            if (f.getIP() != null) return false;
+        }
+        return true;
+    }
+
 
 }

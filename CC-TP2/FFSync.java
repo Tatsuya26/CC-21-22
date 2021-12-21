@@ -1,15 +1,12 @@
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetAddress;
-import java.net.ServerSocket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class FFSync {
     public static void main(String[] args) throws InterruptedException {
-       if (args.length == 0) {
+        if (args.length == 0) {
             System.out.println("Falta argumentos");
             return ;
         }
@@ -18,22 +15,17 @@ public class FFSync {
         try {
             InetAddress[] ips = new InetAddress[args.length - 1];
             for (int i = 1 ; i < args.length; i++) 
-                ips[i-1] = InetAddress.getByName(args[i]);
+            ips[i-1] = InetAddress.getByName(args[i]);
             File diretoria = new File(pasta);
-            Thread cliente = new Thread(new FTRapidClient(diretoria, ips));
+            TimerTask task = new FTRapidClient(diretoria, ips);
+            Timer timer = new Timer(true);
             Thread serverUDP = new Thread(new FTRapidServer(diretoria,ips));
-            cliente.start();
+            Thread http = new Thread(new HTTPServer());
             serverUDP.start();
-            cliente.join();
+            http.start();
+            timer.scheduleAtFixedRate(task, 0, 60000);
             serverUDP.join();
-
-            ServerSocket socket = new ServerSocket(80);
-
-            while (true) {
-                Thread http = new Thread(new HTTPResponser(socket.accept()));
-                http.start();
-            }
-            
+            http.join();
         }
         catch (IOException e) {
              e.printStackTrace();   

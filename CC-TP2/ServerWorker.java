@@ -1,12 +1,10 @@
 import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -19,8 +17,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ServerWorker implements Runnable{
+<<<<<<< HEAD
     public InetAddress[] ips;
     public Security s;
+=======
+>>>>>>> 1254c7e32672f57ef3c5b113fa3a0ff9b5e01a70
     public BufferedWriter myWriter;
     public BufferedWriter http_info;
     private DatagramPacket received;
@@ -39,7 +40,6 @@ public class ServerWorker implements Runnable{
     public ServerWorker(DatagramPacket received,File folder) {
         this.received = received;
         this.folder = folder;
-        this.ips = ips;
         
         try {
             whenWriteStringUsingBufferedWritter_thenCorrect();
@@ -63,7 +63,7 @@ public class ServerWorker implements Runnable{
             // Vemos a informação do cliente no Packet.
             int port = this.received.getPort();
             InetAddress clientIP = this.received.getAddress();
-            while (i < 25){
+            while (i < 10){
                 try {
 
                     this.s = new Security();
@@ -83,11 +83,12 @@ public class ServerWorker implements Runnable{
                         // Se opcode == 2, recebemos um pedido de leitura de um ficheiro. Enviamos o ficheiro ao cliente e no fim enviamos um FINPacket.
                         if (opcode == 2) {
                             ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                            System.out.print("Pedido para enviar o ficheiro " + readFile.getFileName());
                             sendFile(readFile,clientIP,port);
                         }
                         //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
                         if (opcode == 5) {
-                            i = 25;
+                            i = 10;
                         }
                         // Criar um novo pacote e esperar pela resposta do cliente.
                         byte[] indata = new byte[1320];
@@ -196,7 +197,6 @@ public class ServerWorker implements Runnable{
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {
-            System.out.println("Ficheiro nao existe");
             this.myWriter.append("Ficheiro nao existe \n");
 
             return;
