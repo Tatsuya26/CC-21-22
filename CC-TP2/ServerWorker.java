@@ -76,6 +76,7 @@ public class ServerWorker implements Runnable{
                         // Se opcode == 2, recebemos um pedido de leitura de um ficheiro. Enviamos o ficheiro ao cliente e no fim enviamos um FINPacket.
                         if (opcode == 2) {
                             ReadFilePacket readFile = ReadFilePacket.deserialize(bis);
+                            System.out.print("Pedido para enviar o ficheiro " + readFile.getFileName());
                             sendFile(readFile,clientIP,port);
                         }
                         //Se opcode == 5, recebemos um FINPacket. Isso significa que já enviamos um FINPacket e assim saímos.
