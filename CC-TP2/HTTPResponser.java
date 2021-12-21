@@ -10,19 +10,20 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.text.html.HTML;
 
 public class HTTPResponser implements Runnable{
     
     private Socket canal;
-    BufferedReader readLog;
+    BufferedReader httpV1;
+    BufferedReader httpV2;
 
-    public HTTPResponser(Socket canal){
+
+    public HTTPResponser(Socket canal) {
         this.canal = canal;
         try {
-            this.readLog =  new BufferedReader(new FileReader(new File("Logs")));
+            this.httpV1 =  new BufferedReader(new FileReader(new File("http")));
+            this.httpV2 =  new BufferedReader(new FileReader(new File("httpV2")));
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -31,11 +32,14 @@ public class HTTPResponser implements Runnable{
         List<String> str_log = new ArrayList<>();
         String line = "";
         try {
-            while ((line = this.readLog.readLine()) != null) str_log.add(line);
+            while ((line = this.httpV1.readLine()) != null) str_log.add(line);
+            str_log.add("\n");
+            while ((line = this.httpV2.readLine()) != null) str_log.add(line);
             for(int i = 0; i< str_log.size(); i++) System.out.println(str_log.get(i));
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return str_log;
     }
 
@@ -55,9 +59,6 @@ public class HTTPResponser implements Runnable{
             for(int i = 0; i< log.size(); i++) size_log += log.get(i).length();
 
             
-            
-            // TODO: Definir a mensagem que vamos responder no html
-            // Resposta muito básica ainda
             bwStream.write("HTTP/1.1 200 OK\r\n");
             bwStream.write("Date: Fri, 13 Dec 23:59:59 GMT\r\n");
             bwStream.write("Content-Type: text/html\r\n");
