@@ -21,9 +21,11 @@ public class ClientFileGetter implements Runnable{
     private int window;
     private int port;
     public BufferedWriter myWriter;
+    public BufferedWriter http_info;
 
     public void whenWriteStringUsingBufferedWritter_thenCorrect() throws IOException {
         this.myWriter = new BufferedWriter(new FileWriter("Logs",true));
+        this.http_info = new BufferedWriter(new FileWriter("httpV2",true));
     }
     
     public ClientFileGetter(InetAddress ip,FileInfo fi,File f) {
@@ -34,7 +36,6 @@ public class ClientFileGetter implements Runnable{
         try {
             whenWriteStringUsingBufferedWritter_thenCorrect();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         this.window = 1;
@@ -43,6 +44,7 @@ public class ClientFileGetter implements Runnable{
     
     public void run() {
         try {
+            long size = 0;
             DatagramSocket socket = new DatagramSocket();
             String filename = fi.getName();
             //Criar Pacote para pedir o ficheiro fi ao servidor.
@@ -67,9 +69,12 @@ public class ClientFileGetter implements Runnable{
             int numB = 1;
             System.out.println("A pedir o ficheiro " + filename);
             this.myWriter.append("A pedir o ficheiro " + filename + "\n");
+            this.http_info.append("A pedir ficheiro " +  filename + " do endereço" + ip.toString() + "\n");
             while (i < 5) {
                 try {
                     socket.send(outPacket);
+                    System.out.println("Enviado ACK com o número " + numB);
+                    this.myWriter.append("Enviado ACK com o número " + numB + "\n");
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
@@ -96,6 +101,7 @@ public class ClientFileGetter implements Runnable{
                                 this.window = data.getWindow();
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
                                     dtFiles.set(data.getNumBloco() - numBinicial, data);
+                                    size += data.getLengthData();
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
@@ -130,9 +136,12 @@ public class ClientFileGetter implements Runnable{
             }
             fos.close();
             ficheiro.setLastModified(Long.parseLong(fi.getTime()));
-            this.myWriter.close();
             socket.close();
             System.out.println("Ficheiro "+ filename +" acabado de receber");
+            this.myWriter.append("Ficheiro "+ filename +" acabado de receber\n");
+            this.http_info.append("Recebido " + size + " Bytes\n");
+            this.http_info.close();
+            this.myWriter.close();
         }
         catch (IOException e) {
             e.printStackTrace();

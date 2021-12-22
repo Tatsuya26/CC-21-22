@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Path;
@@ -16,16 +17,19 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ServerWorker implements Runnable{
+    public InetAddress[] ips;
+    public Security s;
     public BufferedWriter myWriter;
+    public BufferedWriter http_info;
     private DatagramPacket received;
     private DatagramSocket socket;
     private File folder;
-    private Security s;
     private int window;
 
 
     public void whenWriteStringUsingBufferedWritter_thenCorrect() throws IOException {
         this.myWriter = new BufferedWriter(new FileWriter("Logs",true));
+        this.http_info = new BufferedWriter(new FileWriter("http",true));
         this.myWriter.write("Logs:\n");
     }
 
@@ -181,9 +185,12 @@ public class ServerWorker implements Runnable{
     // Envia ficheiro ao cliente, verificando sempre que este recebe cada bloco de dados.
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
+        long size = 0;
+        InetAddress host = InetAddress.getLocalHost();
         Path file = Path.of(folder.getAbsolutePath()).resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
         this.myWriter.append("A enviar o ficheiro " + file.toString()+ "\n");
+        this.http_info.append("A enviar o ficheiro " + file.toString() + "\n" + "IP: " + host.toString() + "  -------->  " + "IP: " + clientIP.toString() + "\n");
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {
@@ -202,6 +209,7 @@ public class ServerWorker implements Runnable{
                     byte[] fileData = fis.readNBytes(1291);
                     DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length,this.window, fileData);
                     dtFileWindow.add(dtFile);
+                    size += fileData.length;
                 }
                 i++;
             }
@@ -215,6 +223,9 @@ public class ServerWorker implements Runnable{
         DatagramPacket finPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
         socket.send(finPacket);
         fis.close();
+        this.http_info.append("Debito :" + "\n");
+        this.http_info.append("Enviado com sucesso " + size + " Bytes\n");
+        this.http_info.close();
         
     }
 
@@ -241,6 +252,8 @@ public class ServerWorker implements Runnable{
                         else data.get(atual).setWindow(this.window);
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                        System.out.println("Enviado pacote com o número " + data.get(atual).getNumBloco());
+                        this.myWriter.append("Enviado pacote com o número " + data.get(atual).getNumBloco() + "\n");
                         atual++;
                         numB++;
                     }
@@ -260,6 +273,10 @@ public class ServerWorker implements Runnable{
                         if (opcode == 6) {
                             ACKPacket ack = ACKPacket.deserialize(bis);
                             // Verificar que o ACK corresponde ao Pacote que enviamos
+                            System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
+                            this.myWriter.append("Recebido ACK com o número :" + ack.getNumBloco() + "\n");
+                            System.out.println("A espera do bloco: " + numB);
+                            this.myWriter.append("A espera do bloco: " + numB + "\n");
                             if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
                                 if (ack.getNumBloco() == numB) {
                                     verificado = true;
