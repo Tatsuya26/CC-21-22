@@ -102,6 +102,7 @@ public class ClientFileGetter implements Runnable{
                                     dtFiles.add(data);
                                     size += data.getLengthData();
                                 }
+                                else socket.send(outPacket);
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                             if (opcode == 5) {

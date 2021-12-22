@@ -23,7 +23,7 @@ public class FFSync {
             Thread http = new Thread(new HTTPServer());
             serverUDP.start();
             http.start();
-            timer.scheduleAtFixedRate(task, 0, 30000);
+            timer.scheduleAtFixedRate(task, 0, 60000);
             serverUDP.join();
             http.join();
         }
