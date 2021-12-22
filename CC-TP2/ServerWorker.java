@@ -231,7 +231,7 @@ public class ServerWorker implements Runnable{
     public void sendDataPacket (List<DataTransferPacket> data,InetAddress ip, int port) throws IOException{
         boolean verificado = false;
         int i = 0;
-        socket.setSoTimeout(3000);
+        socket.setSoTimeout(4000);
         int numB = data.get(0).getNumBloco();
         int enviados = 0;
         while (i < 5) {
@@ -282,11 +282,11 @@ public class ServerWorker implements Runnable{
                                 if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
                                     verificado = true;
                                     enviados = data.size();
-                                    if (window < 10) this.window++;
+                                    if (window < 20) this.window++;
                                 }
                                 else if (ack.getNumBloco() == numB) {
                                     enviados += this.window;
-                                    if (window < 10) this.window++;
+                                    if (window < 20) this.window++;
                                 }
                                 else {
                                     enviados = ack.getNumBloco() - data.get(0).getNumBloco();
