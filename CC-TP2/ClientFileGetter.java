@@ -66,7 +66,7 @@ public class ClientFileGetter implements Runnable{
             if (!ficheiro.exists()) ficheiro.createNewFile();
             //Abrir stream para escrever no ficheiro.
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
-            socket.setSoTimeout(1000);
+            socket.setSoTimeout(3000);
             int numB = 1;
             System.out.println("A pedir o ficheiro " + filename);
             this.myWriter.append("A pedir o ficheiro " + filename + "\n");

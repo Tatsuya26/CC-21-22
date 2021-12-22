@@ -232,7 +232,7 @@ public class ServerWorker implements Runnable{
     public void sendDataPacket (List<DataTransferPacket> data,InetAddress ip, int port) throws IOException{
         boolean verificado = false;
         int i = 0;
-        socket.setSoTimeout(1000);
+        socket.setSoTimeout(3000);
         int numB = data.get(0).getNumBloco();
         int enviados = 0;
         while (i < 5) {
