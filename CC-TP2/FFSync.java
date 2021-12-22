@@ -30,8 +30,6 @@ public class FFSync {
         catch (IOException e) {
              e.printStackTrace();   
              
-        }
-        
-            
+        }            
     }
 }
