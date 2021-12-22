@@ -277,7 +277,11 @@ public class ServerWorker implements Runnable{
                             System.out.println("A espera do bloco: " + numB);
                             this.myWriter.append("A espera do bloco: " + numB + "\n");
                             if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
-                                if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco()) {
+                                if (ack.getNumBloco() == data.get(0).getNumBloco()) {
+                                    enviados = 0;
+                                    window = 1;
+                                }
+                                else if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco()) {
                                     verificado = true;
                                     enviados = data.size();
                                     if (window < 10) this.window++;
