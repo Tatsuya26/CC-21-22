@@ -243,7 +243,7 @@ public class ServerWorker implements Runnable{
                     verificado = false;
                     numB = data.get(enviados).getNumBloco();
                     i = 0;
-                    this.window = data.size();
+                    if (this.window > data.size()) window = data.size();
                     while (this.window + enviados > atual && atual < data.size()) {
                         if (data.size() - enviados < window) {
                             data.get(atual).setWindow(data.size() - window);
