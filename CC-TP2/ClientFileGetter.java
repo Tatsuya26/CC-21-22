@@ -97,6 +97,8 @@ public class ClientFileGetter implements Runnable{
                             if (opcode == 3) {
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
                                 this.window = data.getWindow();
+                                if (window == 1) {dtFiles = new ArrayList<>();atual = 0;}
+                                System.out.println("Numero de bloco recebido: " + data.getNumBloco());
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
                                     atual++;
                                     dtFiles.add(data);
