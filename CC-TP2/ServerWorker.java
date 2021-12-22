@@ -242,6 +242,7 @@ public class ServerWorker implements Runnable{
                     int atual = enviados;
                     verificado = false;
                     numB = data.get(enviados).getNumBloco();
+                    int numBinicial = numB;
                     i = 0;
                     if (this.window > data.size()) window = data.size();
                     while (this.window + enviados > atual && atual < data.size()) {
@@ -251,7 +252,6 @@ public class ServerWorker implements Runnable{
                         else data.get(atual).setWindow(this.window);
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                        System.out.println("Enviado pacote com o número " + data.get(atual).getNumBloco());
                         this.myWriter.append("Enviado pacote com o número " + data.get(atual).getNumBloco() + "\n");
                         atual++;
                         numB++;
@@ -272,11 +272,11 @@ public class ServerWorker implements Runnable{
                         if (opcode == 6) {
                             ACKPacket ack = ACKPacket.deserialize(bis);
                             // Verificar que o ACK corresponde ao Pacote que enviamos
-                            System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
-                            this.myWriter.append("Recebido ACK com o número :" + ack.getNumBloco() + "\n");
-                            System.out.println("A espera do bloco: " + numB);
-                            this.myWriter.append("A espera do bloco: " + numB + "\n");
-                            if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
+                            if (ack.getNumBloco() >= numBinicial) {
+                                System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
+                                this.myWriter.append("Recebido ACK com o número :" + ack.getNumBloco() + "\n");
+                                System.out.println("A espera do bloco: " + numB);
+                                this.myWriter.append("A espera do bloco: " + numB + "\n");
                                 if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
                                     verificado = true;
                                     enviados = data.size();
