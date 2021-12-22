@@ -81,6 +81,7 @@ public class ClientFileGetter implements Runnable{
                     int atual = 0;
                     boolean repetidos = false;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
+                    for (int index = 0; index < window;index++) dtFiles.add(index,null);
                     int numBinicial = numB;
                     while (window > atual) {
                         socket.receive(inPacket);
