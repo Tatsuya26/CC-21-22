@@ -245,13 +245,14 @@ public class ServerWorker implements Runnable{
                     int numBinicial = numB;
                     i = 0;
                     if (this.window > data.size()) window = data.size();
+                    if (data.size() - enviados < window) {
+                        this.window = data.size() - enviados;
+                    }
                     while (this.window + enviados > atual && atual < data.size()) {
-                        if (data.size() - enviados < window) {
-                            data.get(atual).setWindow(data.size() - window);
-                        }
-                        else data.get(atual).setWindow(this.window);
+                        data.get(atual).setWindow(this.window);
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                        System.out.println("Enviado pacote com o número " + data.get(atual).getNumBloco());
                         this.myWriter.append("Enviado pacote com o número " + data.get(atual).getNumBloco() + "\n");
                         atual++;
                         numB++;
@@ -280,12 +281,12 @@ public class ServerWorker implements Runnable{
                                 if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
                                     verificado = true;
                                     enviados = data.size();
-                                    if (window < 15) this.window++;
+                                    if (window < 50) this.window++;
                                 }
                                 else if (ack.getNumBloco() == numB) {
                                     verificado = true;
                                     enviados = atual;
-                                    if (window < 15) this.window++;
+                                    if (window < 50) this.window++;
                                 }
                                 else {
                                     enviados = ack.getNumBloco() - data.get(0).getNumBloco();
