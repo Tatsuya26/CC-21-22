@@ -66,7 +66,7 @@ public class ClientFileGetter implements Runnable{
             if (!ficheiro.exists()) ficheiro.createNewFile();
             //Abrir stream para escrever no ficheiro.
             FileOutputStream fos = new FileOutputStream(ficheiro,false);
-            socket.setSoTimeout(3000);
+            socket.setSoTimeout(1000);
             int numB = 1;
             System.out.println("A pedir o ficheiro " + filename);
             this.myWriter.append("A pedir o ficheiro " + filename + "\n");
@@ -79,6 +79,7 @@ public class ClientFileGetter implements Runnable{
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
+                    boolean repetidos = false;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
                     int numBinicial = numB;
                     while (window > atual) {
@@ -96,12 +97,16 @@ public class ClientFileGetter implements Runnable{
                             // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
                             if (opcode == 3) {
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                                this.window = data.getWindow();
+                                if (this.window != data.getWindow()) {
+                                    dtFiles = new ArrayList<>();
+                                    this.window = data.getWindow();
+                                    for (int index = 0; index < window;index++) dtFiles.add(index,null);
+                                }
                                 if (window == 1) {dtFiles = new ArrayList<>();atual = 0;}
                                 System.out.println("Numero de bloco recebido: " + data.getNumBloco());
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                    atual++;
-                                    dtFiles.add(data);
+                                    if (dtFiles.get(data.getNumBloco() - numBinicial) == null) atual++;
+                                    dtFiles.set(data.getNumBloco() - numBinicial, data);
                                     size += data.getLengthData();
                                 }
                             }
@@ -118,7 +123,7 @@ public class ClientFileGetter implements Runnable{
                     List<DataTransferPacket> filesWindow = new ArrayList<>();
                     for (int index = 0; index < window;index++) filesWindow.add(index,null);
                     for (DataTransferPacket d : dtFiles) filesWindow.set(d.getNumBloco() - numBinicial, d);
-                    if (i < 5) {
+                    if (i < 5 && !repetidos) {
                         for (int index = 0; index < filesWindow.size();index++) {
                             if (filesWindow.get(index) == null) {
                                 index = filesWindow.size();
