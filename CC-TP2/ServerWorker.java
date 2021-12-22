@@ -285,7 +285,6 @@ public class ServerWorker implements Runnable{
                                     if (window < 25) this.window++;
                                 }
                                 else if (ack.getNumBloco() == numB) {
-                                    verificado = true;
                                     enviados += this.window;
                                     if (window < 25) this.window++;
                                 }
