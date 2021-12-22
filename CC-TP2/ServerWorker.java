@@ -98,7 +98,6 @@ public class ServerWorker implements Runnable{
             }
             socket.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -235,7 +234,6 @@ public class ServerWorker implements Runnable{
         socket.setSoTimeout(3000);
         int numB = data.get(0).getNumBloco();
         int enviados = 0;
-        for (DataTransferPacket d : data) System.out.println(d.getNumBloco());
         while (i < 5) {
             try {
                 // Enquando nao se verificar que o cliente recebeu o pacote, enviamos o pacote.
@@ -243,8 +241,10 @@ public class ServerWorker implements Runnable{
                     int atual = enviados;
                     verificado = false;
                     numB = data.get(enviados).getNumBloco();
+                    System.out.println("Enviados " + enviados);
+                    System.out.println("Atual " + atual);
+                    System.out.println("NumB " + numB);
                     int numBinicial = numB;
-                    i = 0;
                     if (this.window > data.size()) window = data.size();
                     if (data.size() - enviados < window) {
                         this.window = data.size() - enviados;
@@ -286,7 +286,7 @@ public class ServerWorker implements Runnable{
                                 }
                                 else if (ack.getNumBloco() == numB) {
                                     verificado = true;
-                                    enviados = ack.getNumBloco() - data.get(0).getNumBloco();
+                                    enviados += this.window;
                                     if (window < 25) this.window++;
                                 }
                                 else {
@@ -297,7 +297,7 @@ public class ServerWorker implements Runnable{
                         }
                     }
                 }
-                if (data.size() == enviados) i = 5;
+                if (data.size() <= enviados) i = 5;
             }
             catch (SocketTimeoutException e) {
                 i++;
