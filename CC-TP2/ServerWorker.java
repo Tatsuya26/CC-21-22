@@ -117,10 +117,10 @@ public class ServerWorker implements Runnable{
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
-            if ((bos.size() + fi.serialize().length + 1) > 1293) {
+            if ((bos.size() + fi.serialize().length + 1) > 1291) {
                 bos.write(0);
                 byte[] data = bos.toByteArray();
-                DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length, data);
+                DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length,this.window, data);
                 i++;
                 fiWindow.add(fileInfos);
                 //sendDataPacket(fileInfos, ip, port);
@@ -140,7 +140,7 @@ public class ServerWorker implements Runnable{
         // O byte 0 indica que não temos mais dados;
         bos.write(0);
         byte[] data = bos.toByteArray();
-        DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length, data);
+        DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length,this.window, data);
         fiWindow.add(fileInfos);
         sendDataPacket(fiWindow, ip, port);
         FINPacket fin = new FINPacket();
@@ -199,8 +199,8 @@ public class ServerWorker implements Runnable{
             List<DataTransferPacket> dtFileWindow = new ArrayList<>();
             while (window > i) {
                 if (fis.available() != 0) {
-                    byte[] fileData = fis.readNBytes(1293);
-                    DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length, fileData);
+                    byte[] fileData = fis.readNBytes(1291);
+                    DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length,this.window, fileData);
                     dtFileWindow.add(dtFile);
                 }
                 i++;
@@ -233,20 +233,19 @@ public class ServerWorker implements Runnable{
                     verificado = false;
                     numB = data.get(enviados).getNumBloco();
                     i = 0;
+                    this.window = data.size();
                     while (this.window + enviados > atual && atual < data.size()) {
+                        if (data.size() - enviados < window) {
+                            data.get(atual).setWindow(data.size() - window);
+                        }
+                        else data.get(atual).setWindow(this.window);
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
                         atual++;
                         numB++;
                     }
-
-                    if (this.window > data.size()) {
-                        FINPacket fin = new FINPacket((byte) 1);
-                        byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
-                        DatagramPacket finPacket = (new DatagramPacket(packetToSend,packetToSend.length,ip,port));
-                        socket.send(finPacket);
-                    }
-
+                    
+                    
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata,1320);
                     socket.receive(inPacket);
@@ -262,27 +261,20 @@ public class ServerWorker implements Runnable{
                             ACKPacket ack = ACKPacket.deserialize(bis);
                             // Verificar que o ACK corresponde ao Pacote que enviamos
                             if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
-                                if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
-                                    window = data.size()+1;
+                                if (ack.getNumBloco() == numB) {
                                     verificado = true;
-                                    enviados += window;
-                                    i = 5;
-                                }
-                                else if (ack.getNumBloco() == numB) {
-                                    i = 5;
-                                    verificado = true;
-                                    enviados += window;
+                                    enviados = atual;
                                     this.window++;
                                 }
                                 else {
                                     enviados = ack.getNumBloco() - data.get(0).getNumBloco();
                                     window = 1;
-                                    numB = data.get(enviados).getNumBloco();
                                 }
                             }
                         }
                     }
                 }
+                if (data.size() == enviados) i = 5;
             }
             catch (SocketTimeoutException e) {
                 i++;

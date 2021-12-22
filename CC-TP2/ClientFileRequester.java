@@ -59,16 +59,10 @@ public class ClientFileRequester implements Runnable{
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                             if (opcode == 5) {
-                                FINPacket fin = FINPacket.deserialise(bis);
-                                if (fin.getFincode() == 1) {
-                                    window = atual;
-                                }
-                                else {
-                                    FINPacket finPacket = new FINPacket();
-                                    byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
-                                    socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                                    i = 25;
-                                }
+                                FINPacket finPacket = new FINPacket();
+                                byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                                socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                                i = 25;
                             }
                         }
                     }

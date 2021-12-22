@@ -75,7 +75,7 @@ public class ClientFileGetter implements Runnable{
                     int atual = 0;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
                     for (int index = 0 ; index < window ; index++) dtFiles.add(index,null);
-                    
+                    window = 1;
                     int numBinicial = numB;
                     while (window > atual) {
                         socket.receive(inPacket);
@@ -93,24 +93,18 @@ public class ClientFileGetter implements Runnable{
                             if (opcode == 3) {
                                 atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                                this.window = data.getWindow();
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
                                     dtFiles.set(data.getNumBloco() - numBinicial, data);
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                             if (opcode == 5) {
-                                FINPacket fin = FINPacket.deserialise(bis);
-                                byte fincode = fin.getFincode();
-                                if (fincode == 1) {
-                                    window = atual;
-                                }
-                                else {
-                                    FINPacket finPacket = new FINPacket();
-                                    byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
-                                    socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                                    i = 5;
-                                    window = atual;
-                                }
+                                FINPacket finPacket = new FINPacket();
+                                byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                                socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
+                                i = 5;
+                                window = atual;
                             }
                         }
                     }
@@ -125,7 +119,6 @@ public class ClientFileGetter implements Runnable{
                                 numB++;
                             }
                         }
-                        if (numB == window + numBinicial) window++;
                         ACKPacket ack = new ACKPacket(numB);
                         byte[] outData = s.addSecurityToPacket(ack.serialize());
                         outPacket = new DatagramPacket(outData, outData.length,ip,port);
