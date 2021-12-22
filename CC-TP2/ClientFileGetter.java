@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
 public class ClientFileGetter implements Runnable{
     private InetAddress ip;
     private FileInfo fi;
@@ -79,8 +80,6 @@ public class ClientFileGetter implements Runnable{
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
-                    for (int index = 0 ; index < window ; index++) dtFiles.add(index,null);
-                    window = 1;
                     int numBinicial = numB;
                     while (window > atual) {
                         socket.receive(inPacket);
@@ -100,7 +99,7 @@ public class ClientFileGetter implements Runnable{
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
                                 this.window = data.getWindow();
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                    dtFiles.set(data.getNumBloco() - numBinicial, data);
+                                    dtFiles.add(data);
                                     size += data.getLengthData();
                                 }
                             }
@@ -114,14 +113,17 @@ public class ClientFileGetter implements Runnable{
                             }
                         }
                     }
+                    List<DataTransferPacket> filesWindow = new ArrayList<>();
+                    for (int index = 0; index < window;index++) filesWindow.add(null);
+                    for (DataTransferPacket d : dtFiles) filesWindow.set(d.getNumBloco() - numBinicial, d);
                     if (i < 5) {
-                        for (int index = 0; index < dtFiles.size();index++) {
-                            if (dtFiles.get(index) == null) {
-                                index = dtFiles.size();
+                        for (int index = 0; index < filesWindow.size();index++) {
+                            if (filesWindow.get(index) == null) {
+                                index = filesWindow.size();
                                 window = 1;
                             }
                             else {
-                                fos.write(dtFiles.get(index).getData());
+                                fos.write(filesWindow.get(index).getData());
                                 numB++;
                             }
                         }
