@@ -102,7 +102,7 @@ public class ClientFileGetter implements Runnable{
                                     this.window = data.getWindow();
                                     for (int index = 0; index < window;index++) dtFiles.add(index,null);
                                 }
-                                if (window == 1) {dtFiles = new ArrayList<>();atual = 0;}
+                                if (window == 1) {dtFiles = new ArrayList<>();dtFiles.add(null); atual = 0;}
                                 System.out.println("Numero de bloco recebido: " + data.getNumBloco());
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
                                     if (dtFiles.get(data.getNumBloco() - numBinicial) == null) atual++;
