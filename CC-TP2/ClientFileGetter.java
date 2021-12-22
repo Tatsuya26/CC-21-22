@@ -95,10 +95,10 @@ public class ClientFileGetter implements Runnable{
                             int opcode = bis.read();
                             // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
                             if (opcode == 3) {
-                                atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
                                 this.window = data.getWindow();
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
+                                    atual++;
                                     dtFiles.add(data);
                                     size += data.getLengthData();
                                 }
@@ -120,7 +120,6 @@ public class ClientFileGetter implements Runnable{
                         for (int index = 0; index < filesWindow.size();index++) {
                             if (filesWindow.get(index) == null) {
                                 index = filesWindow.size();
-                                window = 1;
                             }
                             else {
                                 fos.write(filesWindow.get(index).getData());
