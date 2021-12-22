@@ -46,6 +46,7 @@ public class ClientFileGetter implements Runnable{
     public void run() {
         try {
             long size = 0;
+            long start = System.nanoTime();
             DatagramSocket socket = new DatagramSocket();
             String filename = fi.getName();
             //Criar Pacote para pedir o ficheiro fi ao servidor.
@@ -147,7 +148,12 @@ public class ClientFileGetter implements Runnable{
             fos.close();
             ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
+            long end = System.nanoTime();
+            double time = (end - start) / 1000000000;
+            long bits = size*8;
+            double debito = bits / time;
             System.out.println("Ficheiro "+ filename +" acabado de receber");
+            System.out.println("Recebidos " + size + " bytes com um débito de "+ debito + " bps");
             this.myWriter.append("Ficheiro "+ filename +" acabado de receber\n");
             this.http_info.append("Recebido " + size + " Bytes\n");
             this.http_info.close();
