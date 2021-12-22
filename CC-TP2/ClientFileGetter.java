@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -110,7 +111,6 @@ public class ClientFileGetter implements Runnable{
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
                                     if (dtFiles.get(data.getNumBloco() - numBinicial) == null) atual++;
                                     dtFiles.set(data.getNumBloco() - numBinicial, data);
-                                    size += data.getLengthData();
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
@@ -134,6 +134,7 @@ public class ClientFileGetter implements Runnable{
                             else {
                                 fos.write(filesWindow.get(index).getData());
                                 numB++;
+                                size += filesWindow.get(index).getLengthData();
                             }
                         }
                         ACKPacket ack = new ACKPacket(numB);
@@ -151,9 +152,11 @@ public class ClientFileGetter implements Runnable{
             long end = System.nanoTime();
             double time = (end - start) / 1000000000;
             long bits = size*8;
-            double debito = bits / time;
+            BigDecimal deb = new BigDecimal(bits);
+            BigDecimal ot = new BigDecimal(time);
+            deb.divide(ot);
             System.out.println("Ficheiro "+ filename +" acabado de receber");
-            System.out.println("Recebidos " + size + " bytes com um débito de "+ debito + " bps");
+            System.out.println("Recebidos " + size + " bytes com um débito de "+ deb.toString() + " bps");
             this.myWriter.append("Ficheiro "+ filename +" acabado de receber\n");
             this.http_info.append("Recebido " + size + " Bytes\n");
             this.http_info.close();
