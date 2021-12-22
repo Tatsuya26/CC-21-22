@@ -114,7 +114,7 @@ public class ClientFileGetter implements Runnable{
                         }
                     }
                     List<DataTransferPacket> filesWindow = new ArrayList<>();
-                    for (int index = 0; index < window;index++) filesWindow.add(null);
+                    for (int index = 0; index < window;index++) filesWindow.add(index,null);
                     for (DataTransferPacket d : dtFiles) filesWindow.set(d.getNumBloco() - numBinicial, d);
                     if (i < 5) {
                         for (int index = 0; index < filesWindow.size();index++) {

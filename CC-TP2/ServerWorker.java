@@ -280,7 +280,7 @@ public class ServerWorker implements Runnable{
                                 if (ack.getNumBloco() == numB) {
                                     verificado = true;
                                     enviados = atual;
-                                    this.window++;
+                                    if (window < 25) this.window++;
                                 }
                                 else {
                                     enviados = ack.getNumBloco() - data.get(0).getNumBloco();
