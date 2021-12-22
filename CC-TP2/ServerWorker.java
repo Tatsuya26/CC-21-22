@@ -235,6 +235,7 @@ public class ServerWorker implements Runnable{
         socket.setSoTimeout(3000);
         int numB = data.get(0).getNumBloco();
         int enviados = 0;
+        for (DataTransferPacket d : data) System.out.println(d.getNumBloco());
         while (i < 5) {
             try {
                 // Enquando nao se verificar que o cliente recebeu o pacote, enviamos o pacote.
