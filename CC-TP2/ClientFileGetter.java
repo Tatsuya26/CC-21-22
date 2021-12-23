@@ -52,7 +52,7 @@ public class ClientFileGetter implements Runnable{
             //Criar Pacote para pedir o ficheiro fi ao servidor.
             ReadFilePacket readFile = new ReadFilePacket(filename);
             byte[] rfBytes = s.addSecurityToPacket(readFile.serialize());
-            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,8080);
+            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,80);
             int i = 0;
             // Resolver o nome do ficheiro para ficar na diretoria onde estamos a sincronizar. Neste caso a diretoria pai da dada nos parametros
             Path file = Path.of(filename);
