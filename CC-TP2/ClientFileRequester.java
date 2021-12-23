@@ -25,7 +25,7 @@ public class ClientFileRequester implements Runnable{
             DatagramSocket socket = new DatagramSocket();
             RQFileInfoPacket rqPacket = new RQFileInfoPacket();
             byte[] rqBytes = s.addSecurityToPacket(rqPacket.serialize());
-            DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,80);
+            DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,8080);
             int i = 0;
             int numB = 1;
             socket.setSoTimeout(1000);
@@ -51,10 +51,16 @@ public class ClientFileRequester implements Runnable{
                             int opcode = bis.read();
                             // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
                             if (opcode == 3) {
-                                atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
+                                if (this.window != data.getWindow()) {
+                                    dtFiles = new ArrayList<>();
+                                    this.window = data.getWindow();
+                                    for (int index = 0;index < window;index++) dtFiles.add(index,null);
+                                    atual = 0;
+                                }
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                        dtFiles.add(data);
+                                    if (dtFiles.get(data.getNumBloco() - numBinicial) == null) atual++;
+                                    dtFiles.set(data.getNumBloco() - numBinicial, data);
                                 }
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
@@ -67,31 +73,18 @@ public class ClientFileRequester implements Runnable{
                         }
                     }
                     if (i < 5) {
-                        if (dtFiles.size() == window) {
-                            for (DataTransferPacket dtp : dtFiles) {
-                                readFileInfos(dtp);
+                        for (int index = 0; index < dtFiles.size();index++) {
+                            if (dtFiles.get(index) == null) {
+                                index = dtFiles.size();
+                            }
+                            else {
+                                readFileInfos(dtFiles.get(index));
                                 numB++;
                             }
-                            ACKPacket ack = new ACKPacket(numB);
-                            byte[] outData = s.addSecurityToPacket(ack.serialize());
-                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
-                            window++;
                         }
-                        else {
-                            for (int index = 0; index < dtFiles.size();index++) {
-                                if (dtFiles.get(index) == null) {
-                                    numB = numB + index;
-                                    index = dtFiles.size();
-                                }
-                                else {
-                                    readFileInfos(dtFiles.get(index));
-                                }
-                            }
-                            window = 1;
-                            ACKPacket ack = new ACKPacket(numB);
-                            byte[] outData = s.addSecurityToPacket(ack.serialize());
-                            outPacket = new DatagramPacket(outData, outData.length,ip,port);
-                        }
+                        ACKPacket ack = new ACKPacket(numB);
+                        byte[] outData = s.addSecurityToPacket(ack.serialize());
+                        outPacket = new DatagramPacket(outData, outData.length,ip,port);
                     }
                 }   
                 catch (SocketTimeoutException e) {

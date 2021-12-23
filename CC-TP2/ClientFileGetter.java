@@ -52,7 +52,7 @@ public class ClientFileGetter implements Runnable{
             //Criar Pacote para pedir o ficheiro fi ao servidor.
             ReadFilePacket readFile = new ReadFilePacket(filename);
             byte[] rfBytes = s.addSecurityToPacket(readFile.serialize());
-            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,80);
+            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,8080);
             int i = 0;
             // Resolver o nome do ficheiro para ficar na diretoria onde estamos a sincronizar. Neste caso a diretoria pai da dada nos parametros
             Path file = Path.of(filename);
@@ -80,7 +80,6 @@ public class ClientFileGetter implements Runnable{
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
-                    boolean repetidos = false;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
                     for (int index = 0; index < window;index++) dtFiles.add(index,null);
                     int numBinicial = numB;
@@ -104,9 +103,8 @@ public class ClientFileGetter implements Runnable{
                                     dtFiles = new ArrayList<>();
                                     this.window = data.getWindow();
                                     for (int index = 0; index < window;index++) dtFiles.add(index,null);
+                                    atual = 0;
                                 }
-                                if (window == 1) {dtFiles = new ArrayList<>();dtFiles.add(null); atual = 0;}
-                                System.out.println("Numero de bloco recebido: " + data.getNumBloco());
                                 if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
                                     if (dtFiles.get(data.getNumBloco() - numBinicial) == null) atual++;
                                     dtFiles.set(data.getNumBloco() - numBinicial, data);
@@ -122,7 +120,7 @@ public class ClientFileGetter implements Runnable{
                             }
                         }
                     }
-                    if (i < 5 && !repetidos) {
+                    if (i < 5 ) {
                         List<DataTransferPacket> filesWindow = new ArrayList<>();
                         for (int index = 0; index < window;index++) filesWindow.add(index,null);
                         for (DataTransferPacket d : dtFiles) filesWindow.set(d.getNumBloco() - numBinicial, d);
