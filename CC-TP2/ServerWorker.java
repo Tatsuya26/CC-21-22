@@ -119,7 +119,7 @@ public class ServerWorker implements Runnable{
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
-            if ((bos.size() + fi.serialize().length + 1) > 1291) {
+            if ((bos.size() + fi.serialize().length + 1) > 1289) {
                 bos.write(0);
                 byte[] data = bos.toByteArray();
                 DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length,this.window, data);
@@ -229,7 +229,7 @@ public class ServerWorker implements Runnable{
             List<DataTransferPacket> dtFileWindow = new ArrayList<>();
             while (window > i) {
                 if (fis.available() != 0) {
-                    byte[] fileData = fis.readNBytes(1291);
+                    byte[] fileData = fis.readNBytes(1289);
                     DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length,this.window, fileData);
                     dtFileWindow.add(dtFile);
                     size += fileData.length;
