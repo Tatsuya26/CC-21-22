@@ -32,12 +32,12 @@ public class ClientFileRequester implements Runnable{
             while (i < 25) {
                 try {
                     socket.send(outPacket);
-                    System.out.println("BIGGG");
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
                     int port = 0;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
+                    for (int index = 0;index < window;index++) dtFiles.add(index,null);
                     while (window > atual) {
                         int numBinicial = numB;
                         socket.receive(inPacket);
