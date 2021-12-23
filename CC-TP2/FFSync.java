@@ -23,12 +23,7 @@ public class FFSync {
             Thread http = new Thread(new HTTPServer());
             serverUDP.start();
             http.start();
-<<<<<<< HEAD
-            timer.scheduleAtFixedRate(task, 0, 60000);
-=======
-            // Atualizar de 90 em 90 segundos
             timer.scheduleAtFixedRate(task, 0, 90000);
->>>>>>> 05b41582f6de46b52a755145d315154db941b606
             serverUDP.join();
             http.join();
         }
