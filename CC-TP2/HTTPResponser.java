@@ -29,7 +29,7 @@ public class HTTPResponser implements Runnable{
                 httpV1.write("Nenhum ficheiro foi enviado.");
                 httpV1.close();
             } catch (IOException e1) {
-                e1.printStackTrace();f
+                e1.printStackTrace();
             }
         }
         
