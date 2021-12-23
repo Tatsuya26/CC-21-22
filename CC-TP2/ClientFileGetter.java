@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
 public class ClientFileGetter implements Runnable{
     private InetAddress ip;
     private FileInfo fi;
@@ -45,12 +46,13 @@ public class ClientFileGetter implements Runnable{
     public void run() {
         try {
             long size = 0;
+            long start = System.nanoTime();
             DatagramSocket socket = new DatagramSocket();
             String filename = fi.getName();
             //Criar Pacote para pedir o ficheiro fi ao servidor.
             ReadFilePacket readFile = new ReadFilePacket(filename);
             byte[] rfBytes = s.addSecurityToPacket(readFile.serialize());
-            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,80);
+            DatagramPacket outPacket = new DatagramPacket(rfBytes, rfBytes.length,ip,8080);
             int i = 0;
             // Resolver o nome do ficheiro para ficar na diretoria onde estamos a sincronizar. Neste caso a diretoria pai da dada nos parametros
             Path file = Path.of(filename);
@@ -73,17 +75,16 @@ public class ClientFileGetter implements Runnable{
             while (i < 5) {
                 try {
                     socket.send(outPacket);
-                    System.out.println("Enviado ACK com o número " + numB);
                     this.myWriter.append("Enviado ACK com o número " + numB + "\n");
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
                     List<DataTransferPacket> dtFiles = new ArrayList<>();
-                    for (int index = 0 ; index < window ; index++) dtFiles.add(index,null);
-                    window = 1;
+                    for (int index = 0; index < window;index++) dtFiles.add(index,null);
                     int numBinicial = numB;
                     while (window > atual) {
                         socket.receive(inPacket);
+                        i = 0;
                         this.port = inPacket.getPort();
                         
                         boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
@@ -96,13 +97,26 @@ public class ClientFileGetter implements Runnable{
                             int opcode = bis.read();
                             // Se opcode == 3 temos um DataTransferPacket logo vamos escrever os dados no ficheiro e enviar o ACK.
                             if (opcode == 3) {
-                                atual++;
                                 DataTransferPacket data = DataTransferPacket.deserialize(bis);
-                                this.window = data.getWindow();
-                                if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
-                                    dtFiles.set(data.getNumBloco() - numBinicial, data);
-                                    size += data.getLengthData();
+                                if (this.window != data.getWindow()) {
+                                    dtFiles = new ArrayList<>();
+                                    this.window = data.getWindow();
+                                    for (int index = 0; index < window;index++) dtFiles.add(index,null);
+                                    atual = 0;
                                 }
+                                if (numBinicial + window > data.getNumBloco() && numBinicial <= data.getNumBloco()) {
+                                    if (dtFiles.get(data.getNumBloco() - numBinicial) == null) atual++;
+                                    dtFiles.set(data.getNumBloco() - numBinicial, data);
+                                }
+                            }
+
+                            if (opcode == 4) {
+                                fos.close();
+                                window = 0;
+                                ficheiro.delete();
+                                FINPacket finPacket = new FINPacket();
+                                byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                                outPacket = new DatagramPacket(packetToSend, packetToSend.length,ip,port);
                             }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                             if (opcode == 5) {
@@ -114,15 +128,18 @@ public class ClientFileGetter implements Runnable{
                             }
                         }
                     }
-                    if (i < 5) {
-                        for (int index = 0; index < dtFiles.size();index++) {
-                            if (dtFiles.get(index) == null) {
-                                index = dtFiles.size();
-                                window = 1;
+                    if (i < 5 && window != 0) {
+                        List<DataTransferPacket> filesWindow = new ArrayList<>();
+                        for (int index = 0; index < window;index++) filesWindow.add(index,null);
+                        for (DataTransferPacket d : dtFiles) filesWindow.set(d.getNumBloco() - numBinicial, d);
+                        for (int index = 0; index < filesWindow.size();index++) {
+                            if (filesWindow.get(index) == null) {
+                                index = filesWindow.size();
                             }
                             else {
-                                fos.write(dtFiles.get(index).getData());
+                                fos.write(filesWindow.get(index).getData());
                                 numB++;
+                                size += filesWindow.get(index).getLengthData();
                             }
                         }
                         ACKPacket ack = new ACKPacket(numB);
@@ -137,7 +154,12 @@ public class ClientFileGetter implements Runnable{
             fos.close();
             ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
+            long end = System.nanoTime();
+            double time = (end - start) / (double) 1000000000;
+            long bits = size*8;
+            double debito = bits / time;
             System.out.println("Ficheiro "+ filename +" acabado de receber");
+            System.out.println("Recebidos " + size + " bytes com um débito de "+ debito + " bps demorando " + time + " segundos");
             this.myWriter.append("Ficheiro "+ filename +" acabado de receber\n");
             this.http_info.append("Recebido " + size + " Bytes\n");
             this.http_info.close();

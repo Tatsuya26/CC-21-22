@@ -118,7 +118,7 @@ public class ServerWorker implements Runnable{
             file = parent.relativize(file);
             FileInfo fi = new FileInfo(file.toString(),Long.toString(f.lastModified()));
             // Se a informação do ficheiro já nao tiver espaço no pacote, entao enviamos o pacote e começamos um novo onde escrevemos a informaçao do ficheiro.
-            if ((bos.size() + fi.serialize().length + 1) > 1291) {
+            if ((bos.size() + fi.serialize().length + 1) > 1289) {
                 bos.write(0);
                 byte[] data = bos.toByteArray();
                 DataTransferPacket fileInfos = new DataTransferPacket(numB++, data.length,this.window, data);
@@ -183,16 +183,41 @@ public class ServerWorker implements Runnable{
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
         long size = 0;
-        InetAddress host = InetAddress.getLocalHost();
+        //String host = InetAddress.getLocalHost().getHostAddress();
         Path file = Path.of(folder.getAbsolutePath()).resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
         this.myWriter.append("A enviar o ficheiro " + file.toString()+ "\n");
-        this.http_info.append("A enviar o ficheiro " + file.toString() + "\n" + "IP: " + host.toString() + "  -------->  " + "IP: " + clientIP.toString() + "\n");
+        //this.http_info.append("A enviar o ficheiro " + file.toString() + "\n" + "IP: " + host + "  -------->  " + "IP: " + clientIP.toString() + "\n");
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {
             this.myWriter.append("Ficheiro nao existe \n");
+            ErrorPacket err = new ErrorPacket((byte) 1, "Ficheiro "+ file.toString() + "nao existe nesta maquina");
+            boolean finFlag = false;
+            while (!finFlag) {
+               try { 
+                byte[] data = s.addSecurityToPacket(err.serialize());
+                socket.send(new DatagramPacket(data, data.length,clientIP,port));
+                byte[] indata = new byte[1320];
+                DatagramPacket inPacket = new DatagramPacket(indata, 1320);
+                socket.receive(inPacket);
+                boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
+                if (authenticity) {
+                    byte[] packet = inPacket.getData();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                    int opcode = bis.read();
+                    if (opcode == 5) {
+                        finFlag = true;
+                    }
+                }
+                }
+                catch(SocketTimeoutException e) {}
+            }
+            FINPacket fin = new FINPacket();
+            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+            DatagramPacket finPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
+            socket.send(finPacket);
             return;
         }
         FileInputStream fis = new FileInputStream(ficheiro);
@@ -203,7 +228,7 @@ public class ServerWorker implements Runnable{
             List<DataTransferPacket> dtFileWindow = new ArrayList<>();
             while (window > i) {
                 if (fis.available() != 0) {
-                    byte[] fileData = fis.readNBytes(1291);
+                    byte[] fileData = fis.readNBytes(1289);
                     DataTransferPacket dtFile = new DataTransferPacket(numB++, fileData.length,this.window, fileData);
                     dtFileWindow.add(dtFile);
                     size += fileData.length;
@@ -220,7 +245,6 @@ public class ServerWorker implements Runnable{
         DatagramPacket finPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
         socket.send(finPacket);
         fis.close();
-        this.http_info.append("Debito :" + "\n");
         this.http_info.append("Enviado com sucesso " + size + " Bytes\n");
         this.http_info.close();
         
@@ -230,7 +254,7 @@ public class ServerWorker implements Runnable{
     public void sendDataPacket (List<DataTransferPacket> data,InetAddress ip, int port) throws IOException{
         boolean verificado = false;
         int i = 0;
-        socket.setSoTimeout(1000);
+        socket.setSoTimeout(4000);
         int numB = data.get(0).getNumBloco();
         int enviados = 0;
         while (i < 5) {
@@ -240,16 +264,15 @@ public class ServerWorker implements Runnable{
                     int atual = enviados;
                     verificado = false;
                     numB = data.get(enviados).getNumBloco();
-                    i = 0;
-                    this.window = data.size();
+                    int numBinicial = numB;
+                    if (this.window > data.size()) window = data.size();
+                    if (data.size() - enviados < window) {
+                        this.window = data.size() - enviados;
+                    }
                     while (this.window + enviados > atual && atual < data.size()) {
-                        if (data.size() - enviados < window) {
-                            data.get(atual).setWindow(data.size() - window);
-                        }
-                        else data.get(atual).setWindow(this.window);
+                        data.get(atual).setWindow(this.window);
                         byte[] packetToSend = s.addSecurityToPacket(data.get(atual).serialize());
                         socket.send(new DatagramPacket(packetToSend, packetToSend.length,ip,port));
-                        System.out.println("Enviado pacote com o número " + data.get(atual).getNumBloco());
                         this.myWriter.append("Enviado pacote com o número " + data.get(atual).getNumBloco() + "\n");
                         atual++;
                         numB++;
@@ -270,15 +293,17 @@ public class ServerWorker implements Runnable{
                         if (opcode == 6) {
                             ACKPacket ack = ACKPacket.deserialize(bis);
                             // Verificar que o ACK corresponde ao Pacote que enviamos
-                            System.out.println("Recebido ACK com o número :" + ack.getNumBloco());
-                            this.myWriter.append("Recebido ACK com o número :" + ack.getNumBloco() + "\n");
-                            System.out.println("A espera do bloco: " + numB);
-                            this.myWriter.append("A espera do bloco: " + numB + "\n");
-                            if (ack.getNumBloco() >= data.get(0).getNumBloco()) {
-                                if (ack.getNumBloco() == numB) {
+                            if (ack.getNumBloco() >= numBinicial) {
+                                this.myWriter.append("Recebido ACK com o número :" + ack.getNumBloco() + "\n");
+                                this.myWriter.append("A espera do bloco: " + numB + "\n");
+                                if (ack.getNumBloco() == data.get(data.size()-1).getNumBloco() + 1) {
                                     verificado = true;
-                                    enviados = atual;
-                                    this.window++;
+                                    enviados = data.size();
+                                    if (window < 20) this.window++;
+                                }
+                                else if (ack.getNumBloco() == numB) {
+                                    enviados += this.window;
+                                    if (window < 20) this.window++;
                                 }
                                 else {
                                     enviados = ack.getNumBloco() - data.get(0).getNumBloco();
@@ -288,7 +313,7 @@ public class ServerWorker implements Runnable{
                         }
                     }
                 }
-                if (data.size() == enviados) i = 5;
+                if (data.size() <= enviados) i = 5;
             }
             catch (SocketTimeoutException e) {
                 i++;

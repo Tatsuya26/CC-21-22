@@ -9,13 +9,13 @@ public class DataTransferPacket {
 
     private short numeroBloco;
     private short lengthData;
-    private short window;
+    private int window;
     private byte[] data;
 
     public DataTransferPacket(int numBloco,int length,int window,byte[] data) {
         this.numeroBloco = (short) numBloco;
         this.lengthData = (short) length;
-        this.window = (short) window;
+        this.window = window;
         this.data = data;
     }
 
@@ -36,7 +36,7 @@ public class DataTransferPacket {
     }
 
     public void setWindow(int win) {
-        this.window = (short) win;
+        this.window = win;
     }
 
     public byte[] serialize() throws IOException{
@@ -45,7 +45,7 @@ public class DataTransferPacket {
         dos.writeByte(DataTransferPacket.opcode);
         dos.writeShort(this.numeroBloco);
         dos.writeShort(this.data.length);
-        dos.writeShort(this.window);
+        dos.writeInt(this.window);
         dos.write(this.data);
         while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
@@ -55,7 +55,7 @@ public class DataTransferPacket {
         DataInputStream dis = new DataInputStream(bis);
         short nB = dis.readShort();
         short length = dis.readShort();
-        short window = dis.readShort();
+        int window = dis.readInt();
         byte[] data = dis.readNBytes(length);
         return new DataTransferPacket(nB,length,window,data);
     }
