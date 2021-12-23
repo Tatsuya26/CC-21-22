@@ -46,7 +46,6 @@ public class ServerWorker implements Runnable{
         try {
             this.socket = new DatagramSocket();
         } catch (SocketException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         this.window = 1;
@@ -98,7 +97,6 @@ public class ServerWorker implements Runnable{
             }
             socket.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

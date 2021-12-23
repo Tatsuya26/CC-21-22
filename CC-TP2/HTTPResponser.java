@@ -33,7 +33,7 @@ public class HTTPResponser implements Runnable{
         String line = "";
         try {
             while ((line = this.httpV1.readLine()) != null) str_log.add(line);
-            str_log.add("\n");
+            str_log.add("\n\n");
             while ((line = this.httpV2.readLine()) != null) str_log.add(line);
             for(int i = 0; i< str_log.size(); i++) System.out.println(str_log.get(i));
         } catch (IOException e) {
@@ -79,7 +79,7 @@ public class HTTPResponser implements Runnable{
             bwStream.write("</html>");
             bwStream.flush();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+       
             e.printStackTrace();
         }
 
