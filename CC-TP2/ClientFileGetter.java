@@ -25,8 +25,10 @@ public class ClientFileGetter implements Runnable{
     public BufferedWriter http_info;
 
     public void whenWriteStringUsingBufferedWritter_thenCorrect() throws IOException {
-        this.myWriter = new BufferedWriter(new FileWriter("Logs",true));
-        this.http_info = new BufferedWriter(new FileWriter("httpV2",true));
+        this.myWriter = new BufferedWriter(new FileWriter("Logs",false));
+        this.http_info = new BufferedWriter(new FileWriter("httpV2",false));
+        this.myWriter.write("ClientFileGetter:\n");
+        this.http_info.write("");
     }
     
     public ClientFileGetter(InetAddress ip,FileInfo fi,File f) {
@@ -71,7 +73,7 @@ public class ClientFileGetter implements Runnable{
             int numB = 1;
             System.out.println("A pedir o ficheiro " + filename);
             this.myWriter.append("A pedir o ficheiro " + filename + "\n");
-            this.http_info.append("A pedir ficheiro " +  filename + " do endereço" + ip.toString() + "\n");
+            this.http_info.append("A pedir ficheiro " +  filename + " do endereco" + ip.toString() + "\n");
             while (i < 5) {
                 try {
                     socket.send(outPacket);
@@ -159,9 +161,9 @@ public class ClientFileGetter implements Runnable{
             long bits = size*8;
             double debito = bits / time;
             System.out.println("Ficheiro "+ filename +" acabado de receber");
-            System.out.println("Recebidos " + size + " bytes com um débito de "+ debito + " bps demorando " + time + " segundos");
+            System.out.println("Recebidos " + size + " bytes com um debito de "+ debito + " bps demorando " + time + " segundos");
+            this.http_info.append("Recebidos " + size + " bytes com um debito de "+ debito + " bps demorando " + time + " segundos\n");
             this.myWriter.append("Ficheiro "+ filename +" acabado de receber\n");
-            this.http_info.append("Recebido " + size + " Bytes\n");
             this.http_info.close();
             this.myWriter.close();
         }

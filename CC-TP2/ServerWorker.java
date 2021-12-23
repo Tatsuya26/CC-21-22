@@ -29,7 +29,8 @@ public class ServerWorker implements Runnable{
     public void whenWriteStringUsingBufferedWritter_thenCorrect() throws IOException {
         this.myWriter = new BufferedWriter(new FileWriter("Logs",true));
         this.http_info = new BufferedWriter(new FileWriter("http",true));
-        this.myWriter.write("Logs:\n");
+        this.myWriter.write("ServerWorker:\n");
+        this.http_info.write("");
     }
 
 
@@ -182,11 +183,10 @@ public class ServerWorker implements Runnable{
     public void sendFile(ReadFilePacket readFile,InetAddress clientIP,int port) throws IOException{
         String f = readFile.getFileName();
         long size = 0;
-        //String host = InetAddress.getLocalHost().getHostAddress();
         Path file = Path.of(folder.getAbsolutePath()).resolve(f);
         System.out.println("A enviar o ficheiro " + file.toString());
         this.myWriter.append("A enviar o ficheiro " + file.toString()+ "\n");
-        //this.http_info.append("A enviar o ficheiro " + file.toString() + "\n" + "IP: " + host + "  -------->  " + "IP: " + clientIP.toString() + "\n");
+        this.http_info.append("A enviar o ficheiro " + file.toString() + "\n" + "Para " + "IP: " + clientIP.toString() + "\n");
         // Verificar que estao a pedir um ficheiro existente.
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {

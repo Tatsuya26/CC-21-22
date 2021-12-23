@@ -3,6 +3,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -22,9 +23,26 @@ public class HTTPResponser implements Runnable{
         this.canal = canal;
         try {
             this.httpV1 =  new BufferedReader(new FileReader(new File("http")));
+        } catch (FileNotFoundException e) {
+            try {
+                BufferedWriter httpV1 = new BufferedWriter(new FileWriter("http",true));
+                httpV1.write("Nenhum ficheiro foi enviado.");
+                httpV1.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();f
+            }
+        }
+        
+        try {
             this.httpV2 =  new BufferedReader(new FileReader(new File("httpV2")));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            try {
+                BufferedWriter httpV2 = new BufferedWriter(new FileWriter("httpV2",true));
+                httpV2.write("Nenhum ficheiro foi recebido");
+                httpV2.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -78,6 +96,8 @@ public class HTTPResponser implements Runnable{
             bwStream.write("</body>");
             bwStream.write("</html>");
             bwStream.flush();
+            bwStream.close();
+            brStream.close();
         } catch (IOException e) {
        
             e.printStackTrace();
