@@ -16,7 +16,7 @@ public class ClientFileRequester implements Runnable{
     public ClientFileRequester(InetAddress ip,ArmazemFicheiro f) {
         this.ip = ip;
         this.af = f;
-        this.window = 1;
+        this.window = 0;
     }
     
     public void run() {
