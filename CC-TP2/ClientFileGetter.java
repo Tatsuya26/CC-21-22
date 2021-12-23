@@ -155,7 +155,7 @@ public class ClientFileGetter implements Runnable{
             ficheiro.setLastModified(Long.parseLong(fi.getTime()));
             socket.close();
             long end = System.nanoTime();
-            double time = (end - start) / 1000000000;
+            double time = (end - start) / (double) 1000000000;
             long bits = size*8;
             double debito = bits / time;
             System.out.println("Ficheiro "+ filename +" acabado de receber");
