@@ -193,7 +193,32 @@ public class ServerWorker implements Runnable{
         File ficheiro = new File(file.toString());
         if (!ficheiro.exists()) {
             this.myWriter.append("Ficheiro nao existe \n");
+            ErrorPacket err = new ErrorPacket((byte) 1, "Ficheiro "+ file.toString() + "nao existe nesta maquina");
+            boolean finFlag = false;
+            while (!finFlag) {
+               try { 
+                byte[] data = s.addSecurityToPacket(err.serialize());
+                socket.send(new DatagramPacket(data, data.length,clientIP,port));
+                byte[] indata = new byte[1320];
+                DatagramPacket inPacket = new DatagramPacket(indata, 1320);
+                socket.receive(inPacket);
+                boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
 
+                if (authenticity) {
+                    byte[] packet = inPacket.getData();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
+                    int opcode = bis.read();
+                    if (opcode == 5) {
+                        finFlag = true;
+                    }
+                }
+                }
+                catch(SocketTimeoutException e) {}
+            }
+            FINPacket fin = new FINPacket();
+            byte[] packetToSend = s.addSecurityToPacket(fin.serialize());
+            DatagramPacket finPacket = (new DatagramPacket(packetToSend,packetToSend.length,clientIP,port));
+            socket.send(finPacket);
             return;
         }
         FileInputStream fis = new FileInputStream(ficheiro);

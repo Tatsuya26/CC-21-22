@@ -75,7 +75,6 @@ public class ClientFileGetter implements Runnable{
             while (i < 5) {
                 try {
                     socket.send(outPacket);
-                    System.out.println("Enviado ACK com o número " + numB);
                     this.myWriter.append("Enviado ACK com o número " + numB + "\n");
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
@@ -110,6 +109,15 @@ public class ClientFileGetter implements Runnable{
                                     dtFiles.set(data.getNumBloco() - numBinicial, data);
                                 }
                             }
+
+                            if (opcode == 4) {
+                                fos.close();
+                                window = 0;
+                                ficheiro.delete();
+                                FINPacket finPacket = new FINPacket();
+                                byte[] packetToSend = s.addSecurityToPacket(finPacket.serialize());
+                                outPacket = new DatagramPacket(packetToSend, packetToSend.length,ip,port);
+                            }
                             // Se opcode == 5 temos um FINPacket. Enviamos um FINPacket de volta e dá mos exit.
                             if (opcode == 5) {
                                 FINPacket finPacket = new FINPacket();
@@ -120,7 +128,7 @@ public class ClientFileGetter implements Runnable{
                             }
                         }
                     }
-                    if (i < 5 ) {
+                    if (i < 5 && window != 0) {
                         List<DataTransferPacket> filesWindow = new ArrayList<>();
                         for (int index = 0; index < window;index++) filesWindow.add(index,null);
                         for (DataTransferPacket d : dtFiles) filesWindow.set(d.getNumBloco() - numBinicial, d);
@@ -151,7 +159,7 @@ public class ClientFileGetter implements Runnable{
             long bits = size*8;
             double debito = bits / time;
             System.out.println("Ficheiro "+ filename +" acabado de receber");
-            System.out.println("Recebidos " + size + " bytes com um débito de "+ debito + " bps");
+            System.out.println("Recebidos " + size + " bytes com um débito de "+ debito + " bps demorando " + time + " segundos");
             this.myWriter.append("Ficheiro "+ filename +" acabado de receber\n");
             this.http_info.append("Recebido " + size + " Bytes\n");
             this.http_info.close();
