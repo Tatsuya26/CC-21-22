@@ -16,7 +16,7 @@ public class ClientFileRequester implements Runnable{
     public ClientFileRequester(InetAddress ip,ArmazemFicheiro f) {
         this.ip = ip;
         this.af = f;
-        this.window = 0;
+        this.window = 1;
     }
     
     public void run() {
@@ -25,13 +25,14 @@ public class ClientFileRequester implements Runnable{
             DatagramSocket socket = new DatagramSocket();
             RQFileInfoPacket rqPacket = new RQFileInfoPacket();
             byte[] rqBytes = s.addSecurityToPacket(rqPacket.serialize());
-            DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,80);
+            DatagramPacket outPacket = new DatagramPacket(rqBytes,rqBytes.length,ip,8080);
             int i = 0;
             int numB = 1;
             socket.setSoTimeout(1000);
             while (i < 25) {
                 try {
                     socket.send(outPacket);
+                    System.out.println("BIGGG");
                     byte[] indata = new byte[1320];
                     DatagramPacket inPacket = new DatagramPacket(indata, 1320);
                     int atual = 0;
@@ -44,6 +45,7 @@ public class ClientFileRequester implements Runnable{
                         boolean authenticity = s.verifyPacketAuthenticity(inPacket.getData());
                         
                         if (authenticity) {
+                            i = 0;
                             byte[] packet = inPacket.getData();
                             ByteArrayInputStream bis = new ByteArrayInputStream(Arrays.copyOfRange(packet,20,packet.length));
                             
