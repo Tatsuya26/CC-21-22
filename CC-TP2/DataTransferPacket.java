@@ -7,15 +7,15 @@ import java.io.IOException;
 public class DataTransferPacket {
     public static final byte opcode = 3;
 
-    private short numeroBloco;
+    private int numeroBloco;
     private short lengthData;
-    private int window;
+    private short window;
     private byte[] data;
 
     public DataTransferPacket(int numBloco,int length,int window,byte[] data) {
-        this.numeroBloco = (short) numBloco;
+        this.numeroBloco = numBloco;
         this.lengthData = (short) length;
-        this.window = window;
+        this.window = (short) window;
         this.data = data;
     }
 
@@ -36,16 +36,16 @@ public class DataTransferPacket {
     }
 
     public void setWindow(int win) {
-        this.window = win;
+        this.window = (short) win;
     }
 
     public byte[] serialize() throws IOException{
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeByte(DataTransferPacket.opcode);
-        dos.writeShort(this.numeroBloco);
+        dos.writeInt(this.numeroBloco);
         dos.writeShort(this.data.length);
-        dos.writeInt(this.window);
+        dos.writeShort(this.window);
         dos.write(this.data);
         while (dos.size() < 1300) dos.writeByte(0);
         return bos.toByteArray();
@@ -53,9 +53,9 @@ public class DataTransferPacket {
 
     public static DataTransferPacket deserialize(ByteArrayInputStream bis) throws IOException{
         DataInputStream dis = new DataInputStream(bis);
-        short nB = dis.readShort();
+        int nB = dis.readInt();
         short length = dis.readShort();
-        int window = dis.readInt();
+        short window = dis.readShort();
         byte[] data = dis.readNBytes(length);
         return new DataTransferPacket(nB,length,window,data);
     }
